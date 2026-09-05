@@ -1,5 +1,5 @@
 // src/Components/Common/Navbar.jsx
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useAuth } from '../../Context/AuthContext';
 
 function Navbar() {
@@ -94,9 +94,14 @@ function Navbar() {
                 </li>
               </>
             ) : (
-              <li className="nav-item">
-                <Link className="btn btn-primary" to="/login">Login</Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="btn btn-outline-light me-2" to="/login">Login</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="btn btn-primary" to="/register">Register</Link>
+                </li>
+              </>
             )}
           </ul>
         </div>

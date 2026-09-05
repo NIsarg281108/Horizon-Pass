@@ -1,6 +1,7 @@
+// src/Pages/Login.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router';
+import { useAuth } from '../Context/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -48,6 +49,9 @@ function Login() {
         </form>
         <p className="mt-2">
           Demo: user@horizon.com / user123 or admin@horizon.com / admin123
+        </p>
+        <p className="mt-3 text-center">
+          Don't have an account? <Link to="/register">Register</Link>
         </p>
       </div>
     </div>

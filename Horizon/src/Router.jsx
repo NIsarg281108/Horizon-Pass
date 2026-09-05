@@ -1,5 +1,5 @@
 // src/Router.jsx
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router';
 import Layout from './Components/Common/Layout';
 import Home from './Pages/Home';
 import Login from './Pages/Login';
@@ -14,11 +14,11 @@ import Checkout from './Pages/Checkout';
 import PaymentSuccess from './Pages/PaymentSuccess';
 import Profile from './Pages/Profile';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
-import AdminDashboard from './Pages/AdminDashboard';
-import AddEvent from './Pages/AddEvent';
-import ManageEvents from './Pages/ManageEvents';
-import EditEvent from './Pages/EditEvent';
-import ManageUsers from './Pages/ManageUsers';
+import AdminDashboard from './Components/Admin/AdminDashboard';
+import AddEvent from './Components/Admin/AddEvent';
+import ManageEvents from './Components/Admin/ManageEvents';
+import EditEvent from './Components/Admin/EditEvent';
+import ManageUsers from './Components/Admin/ManageUsers';
 
 const router = createBrowserRouter([
   {

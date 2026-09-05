@@ -1,5 +1,5 @@
 // src/App.jsx
-import { RouterProvider } from 'react-router-dom';
+import { RouterProvider } from 'react-router';
 import router from './Router';
 import { AuthProvider } from './Context/AuthContext';
 import { BookingProvider } from './Context/BookingContext';

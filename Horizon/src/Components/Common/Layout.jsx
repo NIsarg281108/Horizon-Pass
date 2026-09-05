@@ -1,6 +1,6 @@
 import Navbar from './Navbar';
 import Footer from './Footer';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallBack from './ErrorFallBack';
 

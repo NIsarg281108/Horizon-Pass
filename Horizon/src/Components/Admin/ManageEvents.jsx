@@ -1,6 +1,6 @@
 // src/Pages/ManageEvents.jsx
-import { Link } from 'react-router-dom';
-import { useEvents } from '../Context/EventContext';
+import { Link } from 'react-router';
+import { useEvents } from '../../Context/EventContext';
 
 function ManageEvents() {
   const { state, dispatch } = useEvents();

@@ -1,7 +1,7 @@
 // src/Pages/AddEvent.jsx
 import { useState } from 'react';
-import { useEvents } from '../Context/EventContext';
-import { useNavigate } from 'react-router-dom';
+import { useEvents } from '../../Context/EventContext';
+import { useNavigate } from 'react-router';
 
 function AddEvent() {
   const { dispatch } = useEvents();

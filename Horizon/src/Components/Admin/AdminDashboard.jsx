@@ -1,6 +1,6 @@
-import { useEvents } from '../Context/EventContext';
-import { useBookings } from '../Context/BookingContext';
-import { mockUsers } from '../Data/mockUsers';
+import { useEvents } from '../../Context/EventContext';
+import { useBookings } from '../../Context/BookingContext';
+import { mockUsers } from '../../data/mockUsers';
 
 function AdminDashboard() {
   const { state: eventState } = useEvents();
