@@ -21,7 +21,6 @@ function Register() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // Calculate age when DOB changes
     if (name === 'dob') {
       const today = new Date();
       const birthDate = new Date(value);

@@ -1,4 +1,4 @@
-// src/Pages/ManageEvents.jsx
+// src/Components/Admin/ManageEvents.jsx
 import { Link } from 'react-router';
 import { useEvents } from '../../Context/EventContext';
 

@@ -34,14 +34,23 @@ function bookingReducer(state, action) {
   }
 }
 
-// Load initial state from localStorage
+// Safe JSON parsing
 const storedBookings = localStorage.getItem('horizon_bookings');
-const initialBookings = storedBookings ? JSON.parse(storedBookings) : initialState;
+let initialBookings = { bookings: [] };
+if (storedBookings) {
+  try {
+    initialBookings = JSON.parse(storedBookings);
+    if (!initialBookings.bookings || !Array.isArray(initialBookings.bookings)) {
+      initialBookings = { bookings: [] };
+    }
+  } catch (e) {
+    initialBookings = { bookings: [] };
+  }
+}
 
 export function BookingProvider({ children }) {
   const [state, dispatch] = useReducer(bookingReducer, initialBookings);
 
-  // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('horizon_bookings', JSON.stringify(state));
   }, [state]);

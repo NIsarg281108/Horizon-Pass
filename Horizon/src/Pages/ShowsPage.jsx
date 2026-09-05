@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useEvents } from '../Context/EventContext';
 import EventCard from '../Components/Common/EventCard';
 
-function ShowsPage  () {
+function ShowsPage() {
   const { state } = useEvents();
   const shows = useMemo(
     () => state.events.filter((event) => event.category === 'Shows'),

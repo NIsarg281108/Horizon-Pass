@@ -1,4 +1,4 @@
-// src/Pages/AddEvent.jsx
+// src/Components/Admin/AddEvent.jsx
 import { useState } from 'react';
 import { useEvents } from '../../Context/EventContext';
 import { useNavigate } from 'react-router';

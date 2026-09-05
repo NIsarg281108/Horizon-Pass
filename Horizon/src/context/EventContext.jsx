@@ -1,6 +1,6 @@
 // src/context/EventContext.jsx
 import { createContext, useContext, useReducer, useEffect } from 'react';
-import { mockEvents } from '../Data/mockEvents';
+import { mockEvents } from '../data/mockEvents';
 
 const EventContext = createContext();
 
@@ -32,11 +32,19 @@ function eventReducer(state, action) {
   }
 }
 
-// Load from localStorage if available
+// Safe JSON parsing
 const storedEvents = localStorage.getItem('horizon_events');
-const initialEvents = storedEvents
-  ? { events: JSON.parse(storedEvents) }
-  : initialState;
+let initialEvents = { events: mockEvents };
+if (storedEvents) {
+  try {
+    initialEvents = { events: JSON.parse(storedEvents) };
+    if (!Array.isArray(initialEvents.events)) {
+      initialEvents = { events: mockEvents };
+    }
+  } catch (e) {
+    initialEvents = { events: mockEvents };
+  }
+}
 
 export function EventProvider({ children }) {
   const [state, dispatch] = useReducer(eventReducer, initialEvents);

@@ -1,4 +1,4 @@
-// src/Pages/EditEvent.jsx
+// src/Components/Admin/EditEvent.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useEvents } from '../../Context/EventContext';
@@ -70,7 +70,6 @@ function EditEvent() {
       <div className="col-md-8">
         <h2 className="mb-4">Edit Event</h2>
         <form onSubmit={handleSubmit}>
-          {/* Same form fields as AddEvent, but with formData values */}
           <div className="row">
             <div className="col-md-6 mb-2">
               <input name="title" className="form-control" placeholder="Title" value={formData.title} onChange={handleChange} required />

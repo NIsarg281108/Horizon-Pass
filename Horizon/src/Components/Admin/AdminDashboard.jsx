@@ -1,14 +1,14 @@
 import { useEvents } from '../../Context/EventContext';
 import { useBookings } from '../../Context/BookingContext';
-import { mockUsers } from '../../data/mockUsers';
+import { useAuth } from '../../Context/AuthContext'; // optional, for total users
 
 function AdminDashboard() {
   const { state: eventState } = useEvents();
   const { state: bookingState } = useBookings();
-
+  const { registeredUsers } = useAuth();
   const totalEvents = eventState.events.length;
   const totalBookings = bookingState.bookings.length;
-  const totalUsers = mockUsers.length;
+  const totalUsers = 2 + registeredUsers.length; // 2 demo users
 
   return (
     <div>

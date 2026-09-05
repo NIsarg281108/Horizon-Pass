@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useEvents } from '../Context/EventContext';
 
 function EventDetails() {
@@ -12,11 +12,19 @@ function EventDetails() {
     [state.events, id]
   );
 
-  
-
   const [tier, setTier] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedTime, setSelectedTime] = useState('');
+
+  useEffect(() => {
+    if (event) {
+      const tierOptions = event.roomTypes || ['Standard', 'Premium', 'VIP'];
+      setTier(tierOptions[0]);
+      if (event.showtimes && event.showtimes.length > 0) {
+        setSelectedTime(event.showtimes[0]);
+      }
+    }
+  }, [event]);
 
   if (!event) {
     return (
@@ -27,14 +35,6 @@ function EventDetails() {
   }
 
   const tierOptions = event.roomTypes || ['Standard', 'Premium', 'VIP'];
-
-  if (!tier) {
-    setTier(tierOptions[0]);
-  }
-
-  if (!selectedTime && event.showtimes) {
-    setSelectedTime(event.showtimes[0]);
-  }
 
   const getMultiplier = (selectedTier) => {
     if (event.roomTypes) {
@@ -99,7 +99,6 @@ function EventDetails() {
       <div className="card p-4 shadow-sm">
         <h4>Book Your Ticket</h4>
         <div className="row g-3">
-          {/* Showtime selection if available */}
           {event.showtimes && (
             <div className="col-md-4">
               <label className="form-label">Showtime</label>
@@ -115,7 +114,6 @@ function EventDetails() {
             </div>
           )}
 
-          {/* Tier selection */}
           <div className="col-md-4">
             <label className="form-label">
               {event.roomTypes ? 'Room Type' : 'Tier'}
@@ -131,7 +129,6 @@ function EventDetails() {
             </select>
           </div>
 
-          {/* Quantity */}
           <div className="col-md-4">
             <label className="form-label">Quantity</label>
             <input
