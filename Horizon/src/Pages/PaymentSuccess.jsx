@@ -1,5 +1,6 @@
 // src/Pages/PaymentSuccess.jsx
-import { useLocation, Link, useEffect, useRef } from 'react-router';
+import { useLocation, Link } from 'react-router';
+import { useEffect, useRef } from 'react';
 import { useBookings } from '../Context/BookingContext';
 import { useAuth } from '../Context/AuthContext';
 
@@ -12,7 +13,6 @@ function PaymentSuccess() {
 
   useEffect(() => {
     if (bookingData && user && !hasAddedBooking.current) {
-      // Check if booking already exists (prevent duplicates)
       const alreadyExists = state.bookings.some(
         (booking) =>
           booking.barcode === bookingData.barcode ||
@@ -37,7 +37,7 @@ function PaymentSuccess() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, []);
 
   if (!bookingData) {
     return (

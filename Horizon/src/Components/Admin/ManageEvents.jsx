@@ -1,4 +1,3 @@
-// src/Components/Admin/ManageEvents.jsx
 import { Link } from 'react-router';
 import { useEvents } from '../../Context/EventContext';
 
@@ -9,6 +8,16 @@ function ManageEvents() {
     if (window.confirm('Are you sure you want to delete this event?')) {
       dispatch({ type: 'DELETE_EVENT', payload: id });
     }
+  };
+
+  const updateTickets = (eventId, delta) => {
+    const event = state.events.find((e) => e.id === eventId);
+    if (!event) return;
+    const newAvailable = Math.max(0, event.availableTickets + delta);
+    dispatch({
+      type: 'UPDATE_TICKETS',
+      payload: { eventId, availableTickets: newAvailable },
+    });
   };
 
   return (
@@ -35,7 +44,23 @@ function ManageEvents() {
               <td>{event.category}</td>
               <td>{event.date}</td>
               <td>${event.price}</td>
-              <td>{event.availableTickets}/{event.totalTickets}</td>
+              <td>
+                <div className="d-flex align-items-center">
+                  <button
+                    className="btn btn-sm btn-outline-secondary me-1"
+                    onClick={() => updateTickets(event.id, -1)}
+                  >
+                    -
+                  </button>
+                  <span className="mx-1">{event.availableTickets}/{event.totalTickets}</span>
+                  <button
+                    className="btn btn-sm btn-outline-secondary ms-1"
+                    onClick={() => updateTickets(event.id, 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </td>
               <td>
                 <Link
                   to={`/admin/edit-event/${event.id}`}

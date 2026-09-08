@@ -1,4 +1,3 @@
-// src/context/BookingContext.jsx
 import { createContext, useContext, useReducer, useEffect } from 'react';
 
 const BookingContext = createContext();
@@ -26,6 +25,15 @@ function bookingReducer(state, action) {
                   action.payload.foodOrder,
                 ],
               }
+            : booking
+        ),
+      };
+    case 'CANCEL_BOOKING':
+      return {
+        ...state,
+        bookings: state.bookings.map((booking) =>
+          booking.id === action.payload
+            ? { ...booking, status: 'cancelled' }
             : booking
         ),
       };

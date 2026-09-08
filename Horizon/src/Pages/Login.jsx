@@ -1,12 +1,13 @@
-// src/Pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../Context/AuthContext';
+import { useToast } from '../Context/ToastContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -14,7 +15,7 @@ function Login() {
     if (login(email, password)) {
       navigate('/');
     } else {
-      alert('Invalid credentials. Try user@horizon.com / user123 or admin@horizon.com / admin123');
+      showToast('Invalid credentials', 'danger');
     }
   };
 

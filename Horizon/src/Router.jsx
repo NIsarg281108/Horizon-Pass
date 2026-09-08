@@ -1,4 +1,3 @@
-// src/Router.jsx
 import { createBrowserRouter } from 'react-router';
 import Layout from './Components/Common/Layout';
 import Home from './Pages/Home';
@@ -19,6 +18,8 @@ import AddEvent from './Components/Admin/AddEvent';
 import ManageEvents from './Components/Admin/ManageEvents';
 import EditEvent from './Components/Admin/EditEvent';
 import ManageUsers from './Components/Admin/ManageUsers';
+import AdminBookings from './Components/Admin/AdminBookings';
+import SearchResultsPage from './Pages/SearchResultsPage';
 
 const router = createBrowserRouter([
   {
@@ -37,12 +38,14 @@ const router = createBrowserRouter([
       { path: 'checkout', element: <ProtectedRoute><Checkout /></ProtectedRoute> },
       { path: 'payment-success', element: <ProtectedRoute><PaymentSuccess /></ProtectedRoute> },
       { path: 'profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: 'search', element: <ProtectedRoute><SearchResultsPage /></ProtectedRoute> },
       // Admin routes
       { path: 'admin', element: <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute> },
       { path: 'admin/add-event', element: <ProtectedRoute role="admin"><AddEvent /></ProtectedRoute> },
       { path: 'admin/edit-event/:id', element: <ProtectedRoute role="admin"><EditEvent /></ProtectedRoute> },
       { path: 'admin/manage-events', element: <ProtectedRoute role="admin"><ManageEvents /></ProtectedRoute> },
       { path: 'admin/manage-users', element: <ProtectedRoute role="admin"><ManageUsers /></ProtectedRoute> },
+      { path: 'admin/bookings', element: <ProtectedRoute role="admin"><AdminBookings /></ProtectedRoute> },
     ],
   },
 ]);

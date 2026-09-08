@@ -1,4 +1,3 @@
-// src/context/EventContext.jsx
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { mockEvents } from '../data/mockEvents';
 
@@ -26,6 +25,18 @@ function eventReducer(state, action) {
       return {
         ...state,
         events: state.events.filter((event) => event.id !== action.payload),
+      };
+    case 'UPDATE_TICKETS':
+      return {
+        ...state,
+        events: state.events.map((event) =>
+          event.id === action.payload.eventId
+            ? {
+                ...event,
+                availableTickets: action.payload.availableTickets,
+              }
+            : event
+        ),
       };
     default:
       return state;
