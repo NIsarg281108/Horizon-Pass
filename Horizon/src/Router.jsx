@@ -12,6 +12,7 @@ import EventDetails from './Pages/EventDetails';
 import Checkout from './Pages/Checkout';
 import PaymentSuccess from './Pages/PaymentSuccess';
 import Profile from './Pages/Profile';
+import Wishlist from './Pages/Wishlist';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
 import AdminDashboard from './Components/Admin/AdminDashboard';
 import AddEvent from './Components/Admin/AddEvent';
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
       { path: 'checkout', element: <ProtectedRoute><Checkout /></ProtectedRoute> },
       { path: 'payment-success', element: <ProtectedRoute><PaymentSuccess /></ProtectedRoute> },
       { path: 'profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: 'wishlist', element: <ProtectedRoute><Wishlist /></ProtectedRoute> },
       { path: 'search', element: <ProtectedRoute><SearchResultsPage /></ProtectedRoute> },
       // Admin routes
       { path: 'admin', element: <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute> },

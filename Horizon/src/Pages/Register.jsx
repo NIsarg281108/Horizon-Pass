@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../Context/AuthContext';
-import { useToast } from '../Context/ToastContext';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -17,8 +16,9 @@ function Register() {
   const [age, setAge] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useAuth();
-  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const calculateAge = (dob) => {
@@ -240,14 +240,25 @@ function Register() {
 
           <div className="mb-3">
             <label className="form-label">Password *</label>
-            <input
-              type="password"
-              className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-              placeholder="Min 8 characters with upper, lower, number, special"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
+            <div className="position-relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                placeholder="Min 8 characters with upper, lower, number, special"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                className="btn btn-link position-absolute top-0 end-0 h-100 px-3"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ border: 'none', background: 'none', color: '#6c757d' }}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
             {errors.password && <div className="invalid-feedback">{errors.password}</div>}
             {passwordStrength && !errors.password && (
               <small className={`text-${passwordStrength === 'Strong' ? 'success' : passwordStrength === 'Medium' ? 'warning' : 'danger'}`}>
@@ -258,14 +269,25 @@ function Register() {
 
           <div className="mb-3">
             <label className="form-label">Confirm Password *</label>
-            <input
-              type="password"
-              className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
-              placeholder="Re-enter your password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
+            <div className="position-relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                placeholder="Re-enter your password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                className="btn btn-link position-absolute top-0 end-0 h-100 px-3"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{ border: 'none', background: 'none', color: '#6c757d' }}
+              >
+                {showConfirmPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
             {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
           </div>
 

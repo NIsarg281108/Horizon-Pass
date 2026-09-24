@@ -1,25 +1,26 @@
 // src/Components/Admin/AddEvent.jsx
-import { useState } from 'react';
-import { useEvents } from '../../Context/EventContext';
-import { useNavigate } from 'react-router';
+import { useState } from "react";
+import { useEvents } from "../../Context/EventContext";
+import { useNavigate } from "react-router";
+import { createPlaceholderImage } from "../../Utils/Helpers";
 
 function AddEvent() {
   const { dispatch } = useEvents();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    title: '',
-    category: 'Movies',
-    description: '',
-    date: '',
-    time: '',
-    venue: '',
+    title: "",
+    category: "Movies",
+    description: "",
+    date: "",
+    time: "",
+    venue: "",
     price: 0,
     totalTickets: 0,
-    imageUrl: '',
-    showtimes: '',
-    roomTypes: '',
-    facilities: '',
+    imageUrl: "",
+    showtimes: "",
+    roomTypes: "",
+    facilities: "",
   });
 
   const handleChange = (e) => {
@@ -34,14 +35,22 @@ function AddEvent() {
       availableTickets: Number(formData.totalTickets),
       price: Number(formData.price),
       totalTickets: Number(formData.totalTickets),
-      showtimes: formData.showtimes ? formData.showtimes.split(',').map(s => s.trim()) : undefined,
-      roomTypes: formData.roomTypes ? formData.roomTypes.split(',').map(r => r.trim()) : undefined,
-      facilities: formData.facilities ? formData.facilities.split(',').map(f => f.trim()) : undefined,
-      imageUrl: formData.imageUrl || 'https://via.placeholder.com/300x200?text=Event',
+      showtimes: formData.showtimes
+        ? formData.showtimes.split(",").map((s) => s.trim())
+        : undefined,
+      roomTypes: formData.roomTypes
+        ? formData.roomTypes.split(",").map((r) => r.trim())
+        : undefined,
+      facilities: formData.facilities
+        ? formData.facilities.split(",").map((f) => f.trim())
+        : undefined,
+      imageUrl:
+        formData.imageUrl ||
+        createPlaceholderImage("Event", ["#6d5efb", "#3ecf8e"]),
     };
-    dispatch({ type: 'ADD_EVENT', payload: newEvent });
-    alert('Event added successfully!');
-    navigate('/admin');
+    dispatch({ type: "ADD_EVENT", payload: newEvent });
+    alert("Event added successfully!");
+    navigate("/admin");
   };
 
   return (
@@ -143,7 +152,10 @@ function AddEvent() {
                 onChange={handleChange}
               />
             </div>
-            {formData.category === 'Movies' || formData.category === 'Plays' || formData.category === 'Shows' || formData.category === 'Activities' ? (
+            {formData.category === "Movies" ||
+            formData.category === "Plays" ||
+            formData.category === "Shows" ||
+            formData.category === "Activities" ? (
               <div className="col-12 mb-2">
                 <input
                   name="showtimes"
@@ -154,7 +166,7 @@ function AddEvent() {
                 />
               </div>
             ) : null}
-            {formData.category === 'Resorts & Hotels' ? (
+            {formData.category === "Resorts & Hotels" ? (
               <>
                 <div className="col-12 mb-2">
                   <input

@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
-import { mockEvents } from '../data/mockEvents';
+import { mockEvents } from '../Data/mockEvents';
 
 const EventContext = createContext();
 

@@ -6,6 +6,7 @@ import { useToast } from '../Context/ToastContext';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -34,15 +35,24 @@ function Login() {
               required
             />
           </div>
-          <div className="mb-3">
+          <div className="mb-3 position-relative">
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               className="form-control"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              style={{ paddingRight: '40px' }}
             />
+            <button
+              type="button"
+              className="btn btn-link position-absolute top-0 end-0 h-100 px-3"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ border: 'none', background: 'none', color: '#6c757d' }}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
           </div>
           <button type="submit" className="btn btn-primary w-100">
             Login

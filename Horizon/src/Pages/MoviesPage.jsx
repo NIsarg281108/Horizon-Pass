@@ -1,27 +1,7 @@
-// src/Pages/MoviesPage.jsx
-import { useMemo } from 'react';
-import { useEvents } from '../Context/EventContext';
-import EventCard from '../Components/Common/EventCard';
+import CategoryPage from '../Components/Common/CategoryPage';
 
 function MoviesPage() {
-  const { state } = useEvents();
-  const movies = useMemo(
-    () => state.events.filter((event) => event.category === 'Movies'),
-    [state.events]
-  );
-
-  return (
-    <div>
-      <h2 className="mb-4">Movies</h2>
-      <div className="row g-4">
-        {movies.map((event) => (
-          <div className="col-md-4 col-lg-3" key={event.id}>
-            <EventCard event={event} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <CategoryPage category="Movies" title="Movies" icon="🎬" />;
 }
 
 export default MoviesPage;

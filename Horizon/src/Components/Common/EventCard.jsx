@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useWishlist } from '../../Context/WishlistContext';
 import { useReviews } from '../../Context/ReviewContext';
+import ProgressiveImage from './ProgressiveImage';
 
 function EventCard({ event }) {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -17,10 +18,10 @@ function EventCard({ event }) {
       >
         {isWished ? '❤️' : '🤍'}
       </button>
-      <img
+      <ProgressiveImage
         src={event.imageUrl}
-        className="card-img-top"
         alt={event.title}
+        className="card-img-top"
         style={{ height: '200px', objectFit: 'cover' }}
       />
       <div className="card-body">
