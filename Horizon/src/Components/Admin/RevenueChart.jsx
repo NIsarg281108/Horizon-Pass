@@ -1,5 +1,5 @@
-import { useBookings } from "../../context/BookingContext";
-import { useEvents } from "../../context/EventContext";
+import { useBookings } from "../../Context/BookingContext";
+import { useEvents } from "../../Context/EventContext";
 
 function RevenueChart() {
   const { state: bookingState } = useBookings();

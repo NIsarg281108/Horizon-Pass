@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router";
 import { useMemo, useState } from "react";
-import { useEvents } from "../context/EventContext";
-import { useAuth } from "../context/AuthContext";
-import { useBookings } from "../context/BookingContext";
-import { useReviews } from "../context/ReviewContext";
-import { useWishlist } from "../context/WishlistContext";
+import { useEvents } from "../Context/EventContext";
+import { useAuth } from "../Context/AuthContext";
+import { useBookings } from "../Context/BookingContext";
+import { useReviews } from "../Context/ReviewContext";
+import { useWishlist } from "../Context/WishlistContext";
 import SocialShare from "../Components/Common/SocialShare";
 import Recommendations from "../Components/Common/Recommendations";
 import CalendarIntegration from "../Components/Common/CalendarIntegration";

@@ -1,5 +1,5 @@
-import { useWishlist } from "../../context/WishlistContext";
-import { useReviews } from "../../context/ReviewContext";
+import { useWishlist } from "../../Context/WishlistContext";
+import { useReviews } from "../../Context/ReviewContext";
 import { Link } from "react-router";
 
 function EventComparison({ events, onClose }) {

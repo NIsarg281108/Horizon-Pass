@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { useAuth } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext";
+import { useAuth } from "../Context/AuthContext";
+import { useToast } from "../Context/ToastContext";
 
 function Login() {
   const [email, setEmail] = useState("");

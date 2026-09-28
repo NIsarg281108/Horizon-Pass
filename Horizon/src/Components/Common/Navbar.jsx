@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
-import { useWishlist } from "../../context/WishlistContext";
-import { useEvents } from "../../context/EventContext";
+import { useAuth } from "../../Context/AuthContext";
+import { useTheme } from "../../Context/ThemeContext";
+import { useWishlist } from "../../Context/WishlistContext";
+import { useEvents } from "../../Context/EventContext";
 
 function Navbar() {
   const { user, logout } = useAuth();

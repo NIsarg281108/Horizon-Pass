@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useBookings } from "../context/BookingContext";
-import { useWishlist } from "../context/WishlistContext";
-import { useEvents } from "../context/EventContext";
-import { useReviews } from "../context/ReviewContext";
+import { useAuth } from "../Context/AuthContext";
+import { useBookings } from "../Context/BookingContext";
+import { useWishlist } from "../Context/WishlistContext";
+import { useEvents } from "../Context/EventContext";
+import { useReviews } from "../Context/ReviewContext";
 import { Link } from "react-router";
 import EventCard from "../Components/Common/EventCard";
 

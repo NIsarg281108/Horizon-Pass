@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { useEvents } from "../context/EventContext";
-import { useReviews } from "../context/ReviewContext";
+import { useEvents } from "../Context/EventContext";
+import { useReviews } from "../Context/ReviewContext";
 import EventCard from "../Components/Common/EventCard";
 import FilterBar from "../Components/Common/FilterBar";
 

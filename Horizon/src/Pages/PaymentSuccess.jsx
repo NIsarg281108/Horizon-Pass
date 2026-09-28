@@ -1,8 +1,8 @@
 // src/Pages/PaymentSuccess.jsx
 import { useLocation, Link } from "react-router";
 import { useEffect, useRef } from "react";
-import { useBookings } from "../context/BookingContext";
-import { useAuth } from "../context/AuthContext";
+import { useBookings } from "../Context/BookingContext";
+import { useAuth } from "../Context/AuthContext";
 
 function PaymentSuccess() {
   const location = useLocation();

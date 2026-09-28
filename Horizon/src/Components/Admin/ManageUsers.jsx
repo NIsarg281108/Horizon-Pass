@@ -1,5 +1,5 @@
-import { useAuth } from "../../context/AuthContext";
-import { mockUsers } from "../../data/mockUsers";
+import { useAuth } from "../../Context/AuthContext";
+import { mockUsers } from "../../Data/mockUsers";
 
 function ManageUsers() {
   const { registeredUsers, deleteUser, promoteUser } = useAuth();

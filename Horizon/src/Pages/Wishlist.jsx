@@ -1,6 +1,6 @@
-import { useWishlist } from "../context/WishlistContext";
-import { useEvents } from "../context/EventContext";
-import { useReviews } from "../context/ReviewContext";
+import { useWishlist } from "../Context/WishlistContext";
+import { useEvents } from "../Context/EventContext";
+import { useReviews } from "../Context/ReviewContext";
 import { Link } from "react-router";
 import EventComparison from "../Components/Common/EventComparison";
 import { useState } from "react";

@@ -1,8 +1,8 @@
-import { useEvents } from "../../context/EventContext";
-import { useBookings } from "../../context/BookingContext";
-import { useAuth } from "../../context/AuthContext";
-import { useReviews } from "../../context/ReviewContext";
-import { useWishlist } from "../../context/WishlistContext";
+import { useEvents } from "../../Context/EventContext";
+import { useBookings } from "../../Context/BookingContext";
+import { useAuth } from "../../Context/AuthContext";
+import { useReviews } from "../../Context/ReviewContext";
+import { useWishlist } from "../../Context/WishlistContext";
 import { useMemo, useState } from "react";
 import RevenueChart from "./RevenueChart";
 

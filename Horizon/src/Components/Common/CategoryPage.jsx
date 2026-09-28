@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useEvents } from "../../context/EventContext";
-import { useReviews } from "../../context/ReviewContext";
+import { useEvents } from "../../Context/EventContext";
+import { useReviews } from "../../Context/ReviewContext";
 import EventCard from "./EventCard";
 import FilterBar from "./FilterBar";
 

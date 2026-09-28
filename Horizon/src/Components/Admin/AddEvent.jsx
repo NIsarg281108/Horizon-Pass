@@ -1,6 +1,6 @@
 // src/Components/Admin/AddEvent.jsx
 import { useState } from "react";
-import { useEvents } from "../../context/EventContext";
+import { useEvents } from "../../Context/EventContext";
 import { useNavigate } from "react-router";
 import { createPlaceholderImage } from "../../Utils/Helpers";
 

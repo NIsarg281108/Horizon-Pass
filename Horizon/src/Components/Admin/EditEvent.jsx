@@ -1,7 +1,7 @@
 // src/Components/Admin/EditEvent.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useEvents } from "../../context/EventContext";
+import { useEvents } from "../../Context/EventContext";
 import { createPlaceholderImage } from "../../Utils/Helpers";
 
 function EditEvent() {

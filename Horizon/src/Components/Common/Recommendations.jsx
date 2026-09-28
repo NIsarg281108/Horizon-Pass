@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useEvents } from "../../context/EventContext";
-import { useBookings } from "../../context/BookingContext";
-import { useReviews } from "../../context/ReviewContext";
-import { useWishlist } from "../../context/WishlistContext";
+import { useEvents } from "../../Context/EventContext";
+import { useBookings } from "../../Context/BookingContext";
+import { useReviews } from "../../Context/ReviewContext";
+import { useWishlist } from "../../Context/WishlistContext";
 import EventCard from "./EventCard";
 
 function Recommendations({ currentEventId, limit = 4 }) {
