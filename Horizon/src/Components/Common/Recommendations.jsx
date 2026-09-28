@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import { useEvents } from '../../Context/EventContext';
-import { useBookings } from '../../Context/BookingContext';
-import { useReviews } from '../../Context/ReviewContext';
-import { useWishlist } from '../../Context/WishlistContext';
-import EventCard from './EventCard';
+import { useMemo } from "react";
+import { useEvents } from "../../context/EventContext";
+import { useBookings } from "../../context/BookingContext";
+import { useReviews } from "../../context/ReviewContext";
+import { useWishlist } from "../../context/WishlistContext";
+import EventCard from "./EventCard";
 
 function Recommendations({ currentEventId, limit = 4 }) {
   const { state } = useEvents();
@@ -14,13 +14,13 @@ function Recommendations({ currentEventId, limit = 4 }) {
   const recommendations = useMemo(() => {
     if (!currentEventId) return [];
 
-    const currentEvent = state.events.find(e => e.id === currentEventId);
+    const currentEvent = state.events.find((e) => e.id === currentEventId);
     if (!currentEvent) return [];
 
-    let events = state.events.filter(e => e.id !== currentEventId);
+    let events = state.events.filter((e) => e.id !== currentEventId);
 
     // Scoring system for recommendations
-    const scoredEvents = events.map(event => {
+    const scoredEvents = events.map((event) => {
       let score = 0;
 
       // Same category bonus
@@ -48,7 +48,7 @@ function Recommendations({ currentEventId, limit = 4 }) {
 
       // User's booking history in same category
       const userBookingsInCategory = bookingState.bookings.filter(
-        b => b.category === event.category
+        (b) => b.category === event.category,
       ).length;
       score += userBookingsInCategory * 2;
 
@@ -60,7 +60,9 @@ function Recommendations({ currentEventId, limit = 4 }) {
       // Date proximity (events within 7 days)
       const currentDate = new Date(currentEvent.date);
       const eventDate = new Date(event.date);
-      const daysDiff = Math.abs((eventDate - currentDate) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.abs(
+        (eventDate - currentDate) / (1000 * 60 * 60 * 24),
+      );
       if (daysDiff <= 7) score += 3;
       else if (daysDiff <= 14) score += 1;
 
@@ -71,8 +73,15 @@ function Recommendations({ currentEventId, limit = 4 }) {
     return scoredEvents
       .sort((a, b) => b.score - a.score)
       .slice(0, limit)
-      .map(item => item.event);
-  }, [state.events, currentEventId, getAverageRating, wishlist, bookingState.bookings, limit]);
+      .map((item) => item.event);
+  }, [
+    state.events,
+    currentEventId,
+    getAverageRating,
+    wishlist,
+    bookingState.bookings,
+    limit,
+  ]);
 
   if (recommendations.length === 0) {
     return null;
@@ -82,7 +91,9 @@ function Recommendations({ currentEventId, limit = 4 }) {
     <div className="recommendations-section">
       <div className="recommendations-header">
         <h3>🎯 Recommended for You</h3>
-        <p className="text-muted mb-0">Based on your preferences and this event</p>
+        <p className="text-muted mb-0">
+          Based on your preferences and this event
+        </p>
       </div>
       <div className="recommendations-grid">
         {recommendations.map((event) => (

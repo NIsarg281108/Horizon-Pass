@@ -1,23 +1,23 @@
-import { useMemo, useState } from 'react';
-import { useEvents } from '../../Context/EventContext';
-import { useReviews } from '../../Context/ReviewContext';
-import EventCard from './EventCard';
-import FilterBar from './FilterBar';
+import { useMemo, useState } from "react";
+import { useEvents } from "../../context/EventContext";
+import { useReviews } from "../../context/ReviewContext";
+import EventCard from "./EventCard";
+import FilterBar from "./FilterBar";
 
 function CategoryPage({ category, title, icon }) {
   const { state } = useEvents();
   const { getAverageRating } = useReviews();
   const [filters, setFilters] = useState({
-    priceRange: 'all',
-    availability: 'all',
-    rating: 'all',
+    priceRange: "all",
+    availability: "all",
+    rating: "all",
   });
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState("popular");
 
   const categoryEvents = useMemo(() => {
     let events = state.events.filter((event) => {
-      if (category === 'Resorts') {
-        return event.category === 'Resorts & Hotels';
+      if (category === "Resorts") {
+        return event.category === "Resorts & Hotels";
       }
       return event.category === category;
     });
@@ -25,26 +25,43 @@ function CategoryPage({ category, title, icon }) {
     // Apply filters
     events = events.filter((event) => {
       // Price filter
-      if (filters.priceRange !== 'all') {
-        if (filters.priceRange === '0-25' && event.price >= 25) return false;
-        if (filters.priceRange === '25-50' && (event.price < 25 || event.price >= 50)) return false;
-        if (filters.priceRange === '50-100' && (event.price < 50 || event.price >= 100)) return false;
-        if (filters.priceRange === '100+' && event.price < 100) return false;
+      if (filters.priceRange !== "all") {
+        if (filters.priceRange === "0-25" && event.price >= 25) return false;
+        if (
+          filters.priceRange === "25-50" &&
+          (event.price < 25 || event.price >= 50)
+        )
+          return false;
+        if (
+          filters.priceRange === "50-100" &&
+          (event.price < 50 || event.price >= 100)
+        )
+          return false;
+        if (filters.priceRange === "100+" && event.price < 100) return false;
       }
 
       // Availability filter
-      if (filters.availability !== 'all') {
-        if (filters.availability === 'available' && event.availableTickets === 0) return false;
-        if (filters.availability === 'limited' && event.availableTickets >= event.totalTickets * 0.3) return false;
-        if (filters.availability === 'sold-out' && event.availableTickets > 0) return false;
+      if (filters.availability !== "all") {
+        if (
+          filters.availability === "available" &&
+          event.availableTickets === 0
+        )
+          return false;
+        if (
+          filters.availability === "limited" &&
+          event.availableTickets >= event.totalTickets * 0.3
+        )
+          return false;
+        if (filters.availability === "sold-out" && event.availableTickets > 0)
+          return false;
       }
 
       // Rating filter
-      if (filters.rating !== 'all') {
+      if (filters.rating !== "all") {
         const rating = getAverageRating(event.id);
-        if (filters.rating === '4' && rating < 4) return false;
-        if (filters.rating === '3' && rating < 3) return false;
-        if (filters.rating === '2' && rating < 2) return false;
+        if (filters.rating === "4" && rating < 4) return false;
+        if (filters.rating === "3" && rating < 3) return false;
+        if (filters.rating === "2" && rating < 2) return false;
       }
 
       return true;
@@ -53,17 +70,21 @@ function CategoryPage({ category, title, icon }) {
     // Apply sorting
     events = [...events].sort((a, b) => {
       switch (sortBy) {
-        case 'price-low':
+        case "price-low":
           return a.price - b.price;
-        case 'price-high':
+        case "price-high":
           return b.price - a.price;
-        case 'rating':
+        case "rating":
           return getAverageRating(b.id) - getAverageRating(a.id);
-        case 'date':
+        case "date":
           return new Date(a.date) - new Date(b.date);
-        case 'popular':
+        case "popular":
         default:
-          return (b.totalTickets - b.availableTickets) - (a.totalTickets - a.availableTickets);
+          return (
+            b.totalTickets -
+            b.availableTickets -
+            (a.totalTickets - a.availableTickets)
+          );
       }
     });
 
@@ -86,7 +107,7 @@ function CategoryPage({ category, title, icon }) {
 
       <div className="category-content">
         <div className="category-sidebar">
-          <FilterBar 
+          <FilterBar
             onFilterChange={setFilters}
             onSortChange={setSortBy}
             totalCount={categoryEvents.length}
@@ -98,7 +119,9 @@ function CategoryPage({ category, title, icon }) {
             <div className="no-events">
               <div className="no-events-icon">🎭</div>
               <h3>No events found</h3>
-              <p className="text-muted">Try adjusting your filters to see more results.</p>
+              <p className="text-muted">
+                Try adjusting your filters to see more results.
+              </p>
             </div>
           ) : (
             <div className="events-grid">

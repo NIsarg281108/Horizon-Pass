@@ -1,10 +1,10 @@
-import { Link } from 'react-router';
-import { useAuth } from '../Context/AuthContext';
-import { useEvents } from '../Context/EventContext';
-import { useWishlist } from '../Context/WishlistContext';
-import { useReviews } from '../Context/ReviewContext';
-import { useMemo, useState, useEffect } from 'react';
-import EventCard from '../Components/Common/EventCard';
+import { Link } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import { useEvents } from "../context/EventContext";
+import { useWishlist } from "../context/WishlistContext";
+import { useReviews } from "../context/ReviewContext";
+import { useMemo, useState, useEffect } from "react";
+import EventCard from "../Components/Common/EventCard";
 
 function Home() {
   const { user } = useAuth();
@@ -14,20 +14,23 @@ function Home() {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
 
   const categories = [
-    { name: 'Movies', path: '/movies', icon: '🎬', color: '#e50914' },
-    { name: 'Plays', path: '/plays', icon: '🎭', color: '#ff6b6b' },
-    { name: 'Activities', path: '/activities', icon: '🎯', color: '#4ecdc4' },
-    { name: 'Shows', path: '/shows', icon: '🎤', color: '#ffe66d' },
-    { name: 'Resorts', path: '/resorts', icon: '🏨', color: '#95e1d3' },
+    { name: "Movies", path: "/movies", icon: "🎬", color: "#e50914" },
+    { name: "Plays", path: "/plays", icon: "🎭", color: "#ff6b6b" },
+    { name: "Activities", path: "/activities", icon: "🎯", color: "#4ecdc4" },
+    { name: "Shows", path: "/shows", icon: "🎤", color: "#ffe66d" },
+    { name: "Resorts", path: "/resorts", icon: "🏨", color: "#95e1d3" },
   ];
 
-  const categoryImages = useMemo(() => [
-    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800',
-    'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800',
-    'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800',
-    'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
-    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-  ], []);
+  const categoryImages = useMemo(
+    () => [
+      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
+      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800",
+      "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800",
+      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+    ],
+    [],
+  );
 
   // Slow down hero image rotation
   useEffect(() => {
@@ -40,7 +43,7 @@ function Home() {
 
   // Preload hero images
   useEffect(() => {
-    categoryImages.forEach(src => {
+    categoryImages.forEach((src) => {
       const img = new Image();
       img.src = src;
     });
@@ -48,14 +51,14 @@ function Home() {
 
   const featuredEvents = useMemo(() => {
     return state.events
-      .filter(event => event.availableTickets > 0)
+      .filter((event) => event.availableTickets > 0)
       .sort((a, b) => getAverageRating(b.id) - getAverageRating(a.id))
       .slice(0, 6);
   }, [state.events, getAverageRating]);
 
   const trendingEvents = useMemo(() => {
     return state.events
-      .filter(event => event.availableTickets < event.totalTickets * 0.3)
+      .filter((event) => event.availableTickets < event.totalTickets * 0.3)
       .slice(0, 4);
   }, [state.events]);
 
@@ -109,9 +112,9 @@ function Home() {
           </div>
         </div>
         <div className="hero-image">
-          <img 
-            src={categoryImages[heroImageIndex]} 
-            alt="Hero" 
+          <img
+            src={categoryImages[heroImageIndex]}
+            alt="Hero"
             className="hero-img"
           />
         </div>
@@ -125,7 +128,8 @@ function Home() {
             <div>
               <h3>Welcome back, {user.name}!</h3>
               <p className="text-muted mb-0">
-                {wishlist.length > 0 && `${wishlist.length} events in your wishlist • `}
+                {wishlist.length > 0 &&
+                  `${wishlist.length} events in your wishlist • `}
                 Ready to discover your next experience?
               </p>
             </div>
@@ -138,17 +142,24 @@ function Home() {
         <h2 className="section-title">Explore Categories</h2>
         <div className="category-grid">
           {categories.map((category) => (
-            <Link 
-              key={category.name} 
+            <Link
+              key={category.name}
               to={category.path}
               className="category-tile-modern"
-              style={{ '--category-color': category.color }}
+              style={{ "--category-color": category.color }}
             >
               <div className="category-icon">{category.icon}</div>
               <div className="category-name">{category.name}</div>
               <div className="category-count">
-                {state.events.filter(e => e.category === category.name || 
-                  (category.name === 'Resorts' && e.category === 'Resorts & Hotels')).length} events
+                {
+                  state.events.filter(
+                    (e) =>
+                      e.category === category.name ||
+                      (category.name === "Resorts" &&
+                        e.category === "Resorts & Hotels"),
+                  ).length
+                }{" "}
+                events
               </div>
             </Link>
           ))}
@@ -159,7 +170,9 @@ function Home() {
       <section className="featured-section">
         <div className="section-header">
           <h2 className="section-title">Featured Events</h2>
-          <Link to="/movies" className="view-all-link">View All →</Link>
+          <Link to="/movies" className="view-all-link">
+            View All →
+          </Link>
         </div>
         <div className="events-grid-modern">
           {featuredEvents.map((event) => (
@@ -175,11 +188,17 @@ function Home() {
         <section className="trending-section">
           <div className="section-header">
             <h2 className="section-title">🔥 Selling Fast</h2>
-            <Link to="/movies" className="view-all-link">View All →</Link>
+            <Link to="/movies" className="view-all-link">
+              View All →
+            </Link>
           </div>
           <div className="trending-grid">
             {trendingEvents.map((event) => (
-              <Link key={event.id} to={`/event/${event.id}`} className="trending-card">
+              <Link
+                key={event.id}
+                to={`/event/${event.id}`}
+                className="trending-card"
+              >
                 <img src={event.imageUrl} alt={event.title} />
                 <div className="trending-overlay">
                   <span className="trending-badge">Selling Fast</span>
@@ -198,7 +217,10 @@ function Home() {
       <section className="cta-section">
         <div className="cta-content">
           <h2>Ready to create unforgettable memories?</h2>
-          <p className="lead">Join thousands of users who trust Horizon Pass for their entertainment needs.</p>
+          <p className="lead">
+            Join thousands of users who trust Horizon Pass for their
+            entertainment needs.
+          </p>
           {!user && (
             <Link className="btn btn-cta" to="/register">
               Sign Up Now – It's Free

@@ -1,7 +1,7 @@
-import { Link } from 'react-router';
-import { useWishlist } from '../../Context/WishlistContext';
-import { useReviews } from '../../Context/ReviewContext';
-import ProgressiveImage from './ProgressiveImage';
+import { Link } from "react-router";
+import { useWishlist } from "../../context/WishlistContext";
+import { useReviews } from "../../context/ReviewContext";
+import ProgressiveImage from "./ProgressiveImage";
 
 function EventCard({ event }) {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -16,13 +16,13 @@ function EventCard({ event }) {
         onClick={() => toggleWishlist(event.id)}
         style={{ zIndex: 10 }}
       >
-        {isWished ? '❤️' : '🤍'}
+        {isWished ? "❤️" : "🤍"}
       </button>
       <ProgressiveImage
         src={event.imageUrl}
         alt={event.title}
         className="card-img-top"
-        style={{ height: '200px', objectFit: 'cover' }}
+        style={{ height: "200px", objectFit: "cover" }}
       />
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-start mb-2">
@@ -33,19 +33,25 @@ function EventCard({ event }) {
         </div>
         <h5 className="card-title">{event.title}</h5>
         <p className="card-text text-muted small mb-1">{event.venue}</p>
-        <p className="card-text small text-muted">{event.date} • {event.time}</p>
+        <p className="card-text small text-muted">
+          {event.date} • {event.time}
+        </p>
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <span className="fw-bold">
               ${event.price}
-              {event.category === 'Resorts & Hotels' ? '/night' : ''}
+              {event.category === "Resorts & Hotels" ? "/night" : ""}
             </span>
             <div className="text-warning small">
-              {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))}
+              {"★".repeat(Math.round(avgRating))}
+              {"☆".repeat(5 - Math.round(avgRating))}
               <span className="text-muted ms-1">({avgRating.toFixed(1)})</span>
             </div>
           </div>
-          <Link to={`/event/${event.id}`} className="btn btn-sm btn-outline-primary">
+          <Link
+            to={`/event/${event.id}`}
+            className="btn btn-sm btn-outline-primary"
+          >
             Details
           </Link>
         </div>

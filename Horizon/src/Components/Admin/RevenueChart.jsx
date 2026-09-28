@@ -1,5 +1,5 @@
-import { useBookings } from '../../Context/BookingContext';
-import { useEvents } from '../../Context/EventContext';
+import { useBookings } from "../../context/BookingContext";
+import { useEvents } from "../../context/EventContext";
 
 function RevenueChart() {
   const { state: bookingState } = useBookings();
@@ -44,7 +44,7 @@ function RevenueChart() {
   return (
     <div>
       <h5 className="mb-3">Revenue by Category</h5>
-      <div className="d-flex align-items-end mb-4" style={{ height: '150px' }}>
+      <div className="d-flex align-items-end mb-4" style={{ height: "150px" }}>
         {Object.keys(revenueByCategory).length === 0 ? (
           <p className="text-muted">No revenue data yet.</p>
         ) : (
@@ -53,9 +53,9 @@ function RevenueChart() {
               <div
                 className="bg-primary"
                 style={{
-                  width: '60px',
+                  width: "60px",
                   height: `${(revenueByCategory[cat] / maxRevenue) * 120}px`,
-                  minHeight: '10px',
+                  minHeight: "10px",
                 }}
               ></div>
               <small className="d-block mt-1">{cat}</small>
@@ -66,7 +66,10 @@ function RevenueChart() {
       </div>
 
       <h5 className="mb-3">Bookings Over Time (Revenue per Date)</h5>
-      <div className="d-flex align-items-end mb-4" style={{ height: '150px', overflowX: 'auto' }}>
+      <div
+        className="d-flex align-items-end mb-4"
+        style={{ height: "150px", overflowX: "auto" }}
+      >
         {sortedDates.length === 0 ? (
           <p className="text-muted">No data available.</p>
         ) : (
@@ -75,9 +78,9 @@ function RevenueChart() {
               <div
                 className="bg-success"
                 style={{
-                  width: '40px',
+                  width: "40px",
                   height: `${(bookingsByDate[date] / maxRevenue) * 120}px`,
-                  minHeight: '10px',
+                  minHeight: "10px",
                 }}
               ></div>
               <small className="d-block mt-1">{date}</small>
@@ -93,7 +96,10 @@ function RevenueChart() {
       ) : (
         <ul className="list-group">
           {topEventsList.map(([title, qty]) => (
-            <li key={title} className="list-group-item d-flex justify-content-between">
+            <li
+              key={title}
+              className="list-group-item d-flex justify-content-between"
+            >
               <span>{title}</span>
               <span>{qty} tickets</span>
             </li>

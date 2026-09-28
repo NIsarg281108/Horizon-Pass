@@ -1,6 +1,6 @@
-import { useWishlist } from '../../Context/WishlistContext';
-import { useReviews } from '../../Context/ReviewContext';
-import { Link } from 'react-router';
+import { useWishlist } from "../../context/WishlistContext";
+import { useReviews } from "../../context/ReviewContext";
+import { Link } from "react-router";
 
 function EventComparison({ events, onClose }) {
   const { toggleWishlist, wishlist } = useWishlist();
@@ -11,7 +11,7 @@ function EventComparison({ events, onClose }) {
   }
 
   const formatPrice = (price, category) => {
-    return category === 'Resorts & Hotels' ? `$${price}/night` : `$${price}`;
+    return category === "Resorts & Hotels" ? `$${price}/night` : `$${price}`;
   };
 
   return (
@@ -19,7 +19,9 @@ function EventComparison({ events, onClose }) {
       <div className="comparison-modal" onClick={(e) => e.stopPropagation()}>
         <div className="comparison-header">
           <h3>📊 Compare Events</h3>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className="comparison-table">
@@ -27,7 +29,11 @@ function EventComparison({ events, onClose }) {
             <div className="comparison-label">Feature</div>
             {events.map((event) => (
               <div key={event.id} className="comparison-value">
-                <img src={event.imageUrl} alt={event.title} className="event-thumb" />
+                <img
+                  src={event.imageUrl}
+                  alt={event.title}
+                  className="event-thumb"
+                />
                 <span className="event-title-compare">{event.title}</span>
               </div>
             ))}
@@ -57,10 +63,12 @@ function EventComparison({ events, onClose }) {
               <div key={event.id} className="comparison-value">
                 <div className="rating-compare">
                   <span className="stars">
-                    {'★'.repeat(Math.round(getAverageRating(event.id)))}
-                    {'☆'.repeat(5 - Math.round(getAverageRating(event.id)))}
+                    {"★".repeat(Math.round(getAverageRating(event.id)))}
+                    {"☆".repeat(5 - Math.round(getAverageRating(event.id)))}
                   </span>
-                  <span className="rating-score">({getAverageRating(event.id).toFixed(1)})</span>
+                  <span className="rating-score">
+                    ({getAverageRating(event.id).toFixed(1)})
+                  </span>
                 </div>
               </div>
             ))}
@@ -97,7 +105,9 @@ function EventComparison({ events, onClose }) {
             <div className="comparison-label">Availability</div>
             {events.map((event) => (
               <div key={event.id} className="comparison-value">
-                <span className={`availability-badge ${event.availableTickets < 10 ? 'low' : 'good'}`}>
+                <span
+                  className={`availability-badge ${event.availableTickets < 10 ? "low" : "good"}`}
+                >
                   {event.availableTickets} tickets
                 </span>
               </div>
@@ -111,9 +121,15 @@ function EventComparison({ events, onClose }) {
                 {event.facilities ? (
                   <div className="facilities-compare">
                     {event.facilities.slice(0, 3).map((facility, idx) => (
-                      <span key={idx} className="facility-tag-small">{facility}</span>
+                      <span key={idx} className="facility-tag-small">
+                        {facility}
+                      </span>
                     ))}
-                    {event.facilities.length > 3 && <span className="more-facilities">+{event.facilities.length - 3}</span>}
+                    {event.facilities.length > 3 && (
+                      <span className="more-facilities">
+                        +{event.facilities.length - 3}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <span className="text-muted">N/A</span>
@@ -131,7 +147,7 @@ function EventComparison({ events, onClose }) {
                     className="btn btn-compare-wishlist"
                     onClick={() => toggleWishlist(event.id)}
                   >
-                    {wishlist.includes(event.id) ? '❤️ Saved' : '🤍 Save'}
+                    {wishlist.includes(event.id) ? "❤️ Saved" : "🤍 Save"}
                   </button>
                   <Link
                     to={`/event/${event.id}`}

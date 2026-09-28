@@ -1,9 +1,9 @@
-import { useWishlist } from '../Context/WishlistContext';
-import { useEvents } from '../Context/EventContext';
-import { useReviews } from '../Context/ReviewContext';
-import { Link } from 'react-router';
-import EventComparison from '../Components/Common/EventComparison';
-import { useState } from 'react';
+import { useWishlist } from "../context/WishlistContext";
+import { useEvents } from "../context/EventContext";
+import { useReviews } from "../context/ReviewContext";
+import { Link } from "react-router";
+import EventComparison from "../Components/Common/EventComparison";
+import { useState } from "react";
 
 function Wishlist() {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -12,7 +12,9 @@ function Wishlist() {
   const [showComparison, setShowComparison] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState([]);
 
-  const wishlistEvents = state.events.filter(event => wishlist.includes(event.id));
+  const wishlistEvents = state.events.filter((event) =>
+    wishlist.includes(event.id),
+  );
 
   const handleRemoveFromWishlist = (e, eventId) => {
     e.preventDefault();
@@ -28,7 +30,8 @@ function Wishlist() {
           <div>
             <h2 className="wishlist-title">My Wishlist</h2>
             <p className="wishlist-subtitle">
-              {wishlistEvents.length} {wishlistEvents.length === 1 ? 'event' : 'events'} saved
+              {wishlistEvents.length}{" "}
+              {wishlistEvents.length === 1 ? "event" : "events"} saved
             </p>
           </div>
         </div>
@@ -54,8 +57,11 @@ function Wishlist() {
               </span>
               <span className="summary-item">
                 <strong>
-                  ${wishlistEvents.reduce((sum, event) => sum + event.price, 0).toFixed(2)}
-                </strong>{' '}
+                  $
+                  {wishlistEvents
+                    .reduce((sum, event) => sum + event.price, 0)
+                    .toFixed(2)}
+                </strong>{" "}
                 total value
               </span>
             </div>
@@ -76,14 +82,19 @@ function Wishlist() {
             {wishlistEvents.map((event) => (
               <div key={event.id} className="wishlist-item">
                 <div className="wishlist-item-content">
-                  <Link to={`/event/${event.id}`} className="wishlist-item-link">
+                  <Link
+                    to={`/event/${event.id}`}
+                    className="wishlist-item-link"
+                  >
                     <img
                       src={event.imageUrl}
                       alt={event.title}
                       className="wishlist-item-image"
                     />
                     <div className="wishlist-item-details">
-                      <span className="wishlist-item-category">{event.category}</span>
+                      <span className="wishlist-item-category">
+                        {event.category}
+                      </span>
                       <h4 className="wishlist-item-title">{event.title}</h4>
                       <p className="wishlist-item-venue">{event.venue}</p>
                       <div className="wishlist-item-meta">
@@ -92,8 +103,10 @@ function Wishlist() {
                       </div>
                       <div className="wishlist-item-rating">
                         <span className="text-warning">
-                          {'★'.repeat(Math.round(getAverageRating(event.id)))}
-                          {'☆'.repeat(5 - Math.round(getAverageRating(event.id)))}
+                          {"★".repeat(Math.round(getAverageRating(event.id)))}
+                          {"☆".repeat(
+                            5 - Math.round(getAverageRating(event.id)),
+                          )}
                         </span>
                         <span className="rating-score">
                           ({getAverageRating(event.id).toFixed(1)})
@@ -101,7 +114,7 @@ function Wishlist() {
                       </div>
                       <div className="wishlist-item-price">
                         <span className="price-amount">${event.price}</span>
-                        {event.category === 'Resorts & Hotels' && (
+                        {event.category === "Resorts & Hotels" && (
                           <span className="price-unit">/night</span>
                         )}
                       </div>
@@ -121,9 +134,9 @@ function Wishlist() {
       )}
 
       {showComparison && (
-        <EventComparison 
-          events={selectedForComparison} 
-          onClose={() => setShowComparison(false)} 
+        <EventComparison
+          events={selectedForComparison}
+          onClose={() => setShowComparison(false)}
         />
       )}
     </div>

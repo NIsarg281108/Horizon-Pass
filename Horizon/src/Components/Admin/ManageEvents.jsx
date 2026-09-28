@@ -1,12 +1,12 @@
-import { Link } from 'react-router';
-import { useEvents } from '../../Context/EventContext';
+import { Link } from "react-router";
+import { useEvents } from "../../context/EventContext";
 
 function ManageEvents() {
   const { state, dispatch } = useEvents();
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      dispatch({ type: 'DELETE_EVENT', payload: id });
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      dispatch({ type: "DELETE_EVENT", payload: id });
     }
   };
 
@@ -15,7 +15,7 @@ function ManageEvents() {
     if (!event) return;
     const newAvailable = Math.max(0, event.availableTickets + delta);
     dispatch({
-      type: 'UPDATE_TICKETS',
+      type: "UPDATE_TICKETS",
       payload: { eventId, availableTickets: newAvailable },
     });
   };
@@ -52,7 +52,9 @@ function ManageEvents() {
                   >
                     -
                   </button>
-                  <span className="mx-1">{event.availableTickets}/{event.totalTickets}</span>
+                  <span className="mx-1">
+                    {event.availableTickets}/{event.totalTickets}
+                  </span>
                   <button
                     className="btn btn-sm btn-outline-secondary ms-1"
                     onClick={() => updateTickets(event.id, 1)}

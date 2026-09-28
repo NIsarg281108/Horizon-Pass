@@ -1,5 +1,5 @@
-import { useAuth } from '../../Context/AuthContext';
-import { mockUsers } from '../../data/mockUsers';
+import { useAuth } from "../../context/AuthContext";
+import { mockUsers } from "../../data/mockUsers";
 
 function ManageUsers() {
   const { registeredUsers, deleteUser, promoteUser } = useAuth();
@@ -7,13 +7,13 @@ function ManageUsers() {
   const allUsers = [...mockUsers, ...registeredUsers];
 
   const handleDelete = (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       deleteUser(userId);
     }
   };
 
   const handlePromote = (userId) => {
-    if (window.confirm('Make this user an admin?')) {
+    if (window.confirm("Make this user an admin?")) {
       promoteUser(userId);
     }
   };
@@ -34,18 +34,20 @@ function ManageUsers() {
         </thead>
         <tbody>
           {allUsers.map((user) => {
-            const isRegistered = registeredUsers.some((reg) => reg.id === user.id);
+            const isRegistered = registeredUsers.some(
+              (reg) => reg.id === user.id,
+            );
             return (
               <tr key={user.id}>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
-                <td>{user.phone || '—'}</td>
-                <td>{user.age || '—'}</td>
+                <td>{user.phone || "—"}</td>
+                <td>{user.age || "—"}</td>
                 <td>{user.role}</td>
                 <td>
                   {isRegistered && (
                     <>
-                      {user.role !== 'admin' && (
+                      {user.role !== "admin" && (
                         <button
                           className="btn btn-sm btn-success me-1"
                           onClick={() => handlePromote(user.id)}

@@ -1,12 +1,12 @@
-import { RouterProvider } from 'react-router';
-import router from './Router';
-import { AuthProvider } from './Context/AuthContext';
-import { BookingProvider } from './Context/BookingContext';
-import { EventProvider } from './Context/EventContext';
-import { ThemeProvider } from './Context/ThemeContext';
-import { ToastProvider } from './Context/ToastContext';
-import { WishlistProvider } from './Context/WishlistContext';
-import { ReviewProvider } from './Context/ReviewContext';
+import { RouterProvider } from "react-router";
+import router from "./Router";
+import { AuthProvider } from "./context/AuthContext";
+import { BookingProvider } from "./context/BookingContext";
+import { EventProvider } from "./context/EventContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { ToastProvider } from "./context/ToastContext";
+import { WishlistProvider } from "./context/WishlistContext";
+import { ReviewProvider } from "./context/ReviewContext";
 
 function App() {
   return (

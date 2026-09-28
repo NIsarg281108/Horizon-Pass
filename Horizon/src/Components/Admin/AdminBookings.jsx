@@ -1,13 +1,13 @@
-import { useBookings } from '../../Context/BookingContext';
-import { useEvents } from '../../Context/EventContext';
+import { useBookings } from "../../context/BookingContext";
+import { useEvents } from "../../context/EventContext";
 
 function AdminBookings() {
   const { state, dispatch } = useBookings();
   const { state: eventState } = useEvents();
 
   const handleCancel = (id) => {
-    if (window.confirm('Cancel this booking?')) {
-      dispatch({ type: 'CANCEL_BOOKING', payload: id });
+    if (window.confirm("Cancel this booking?")) {
+      dispatch({ type: "CANCEL_BOOKING", payload: id });
     }
   };
 
@@ -29,19 +29,24 @@ function AdminBookings() {
         </thead>
         <tbody>
           {state.bookings.map((booking) => {
-            const event = eventState.events.find((e) => e.id === booking.eventId);
+            const event = eventState.events.find(
+              (e) => e.id === booking.eventId,
+            );
             return (
               <tr key={booking.id}>
                 <td>{booking.id}</td>
                 <td>{booking.userId}</td>
-                <td>{event?.title || 'Unknown'}</td>
+                <td>{event?.title || "Unknown"}</td>
                 <td>{booking.date}</td>
                 <td>{booking.quantity}</td>
                 <td>${booking.totalPrice.toFixed(2)}</td>
                 <td>{booking.status}</td>
                 <td>
-                  {booking.status !== 'cancelled' && (
-                    <button className="btn btn-sm btn-danger" onClick={() => handleCancel(booking.id)}>
+                  {booking.status !== "cancelled" && (
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleCancel(booking.id)}
+                    >
                       Cancel
                     </button>
                   )}
