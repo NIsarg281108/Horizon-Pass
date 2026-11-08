@@ -27,11 +27,8 @@ function AdminDashboard() {
     () => comparePeriods(rawBookingState.bookings, timeRange),
     [rawBookingState.bookings, timeRange],
   );
-
-  const bookingState = useMemo(
-    () => ({ bookings: periods.current }),
-    [periods],
-  );
+  const { current: scopedBookings, previous: priorBookings } = periods;
+  const bookingState = { bookings: scopedBookings };
 
   const userCounts = useMemo(
     () => countUsersInRange(registeredUsers, timeRange),
@@ -42,17 +39,17 @@ function AdminDashboard() {
     list.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
   const changes = {
-    revenue: growth(sumRevenue(periods.current), sumRevenue(periods.previous)),
-    bookings: growth(periods.current.length, periods.previous.length),
+    revenue: growth(sumRevenue(scopedBookings), sumRevenue(priorBookings)),
+    bookings: growth(scopedBookings.length, priorBookings.length),
     users: growth(userCounts.current, userCounts.previous),
   };
 
   const exportRevenue = () => {
-    if (!periods.current.length) {
+    if (!scopedBookings.length) {
       alert("No bookings in this period.");
       return;
     }
-    const rows = periods.current.map((b) => ({
+    const rows = scopedBookings.map((b) => ({
       booking_id: b.id,
       booking_date: b.bookingDate || "",
       event: b.title,

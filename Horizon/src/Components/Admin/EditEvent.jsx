@@ -1,48 +1,50 @@
 // src/Components/Admin/EditEvent.jsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useEvents } from "../../Context/EventContext";
 import { createPlaceholderImage } from "../../Utils/Helpers";
+
+const EMPTY_FORM = {
+  title: "",
+  category: "Movies",
+  description: "",
+  date: "",
+  time: "",
+  venue: "",
+  price: 0,
+  totalTickets: 0,
+  imageUrl: "",
+  showtimes: "",
+  roomTypes: "",
+  facilities: "",
+};
+
+// Turns a saved event into form values
+function toFormData(event) {
+  if (!event) return EMPTY_FORM;
+  return {
+    title: event.title,
+    category: event.category,
+    description: event.description,
+    date: event.date,
+    time: event.time,
+    venue: event.venue,
+    price: event.price,
+    totalTickets: event.totalTickets,
+    imageUrl: event.imageUrl || "",
+    showtimes: event.showtimes ? event.showtimes.join(", ") : "",
+    roomTypes: event.roomTypes ? event.roomTypes.join(", ") : "",
+    facilities: event.facilities ? event.facilities.join(", ") : "",
+  };
+}
 
 function EditEvent() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state, dispatch } = useEvents();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "Movies",
-    description: "",
-    date: "",
-    time: "",
-    venue: "",
-    price: 0,
-    totalTickets: 0,
-    imageUrl: "",
-    showtimes: "",
-    roomTypes: "",
-    facilities: "",
-  });
-
-  useEffect(() => {
-    const event = state.events.find((e) => e.id === id);
-    if (event) {
-      setFormData({
-        title: event.title,
-        category: event.category,
-        description: event.description,
-        date: event.date,
-        time: event.time,
-        venue: event.venue,
-        price: event.price,
-        totalTickets: event.totalTickets,
-        imageUrl: event.imageUrl || "",
-        showtimes: event.showtimes ? event.showtimes.join(", ") : "",
-        roomTypes: event.roomTypes ? event.roomTypes.join(", ") : "",
-        facilities: event.facilities ? event.facilities.join(", ") : "",
-      });
-    }
-  }, [id, state.events]);
+  const event = state.events.find((e) => e.id === id);
+  const [formData, setFormData] = useState(() => toFormData(event));
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

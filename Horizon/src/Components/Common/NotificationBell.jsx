@@ -18,14 +18,16 @@ function NotificationBell() {
   const { user } = useAuth();
   const { state } = useBookings();
   const [open, setOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const [reminders, setReminders] = useState(() => readJson(REMINDERS_KEY, []));
   const [dismissed, setDismissed] = useState(() => readJson(DISMISSED_KEY, []));
   const ref = useRef(null);
 
-  // Reload reminders each time the panel opens, in case they were set elsewhere
+  // Refresh the clock every minute so due reminders appear without a reload
   useEffect(() => {
-    if (open) setReminders(readJson(REMINDERS_KEY, []));
-  }, [open]);
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Close when clicking outside the panel
   useEffect(() => {
@@ -37,10 +39,18 @@ function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleDown);
   }, [open]);
 
+  const toggleOpen = () => {
+    if (!open) {
+      // Reload reminders and the clock each time the panel opens
+      setReminders(readJson(REMINDERS_KEY, []));
+      setNow(Date.now());
+    }
+    setOpen((o) => !o);
+  };
+
   const items = useMemo(() => {
     if (!user) return [];
 
-    const now = Date.now();
     const weekAhead = now + 7 * 86400000;
     const list = [];
 
@@ -75,7 +85,7 @@ function NotificationBell() {
     });
 
     return list.filter((item) => !dismissed.includes(item.id));
-  }, [user, reminders, state.bookings, dismissed]);
+  }, [user, reminders, state.bookings, dismissed, now]);
 
   if (!user) return null;
 
@@ -96,12 +106,14 @@ function NotificationBell() {
       <button
         type="button"
         className="theme-toggle-btn notif-btn"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         aria-label="Notifications"
         aria-expanded={open}
       >
         🔔
-        {items.length > 0 && <span className="action-badge">{items.length}</span>}
+        {items.length > 0 && (
+          <span className="action-badge">{items.length}</span>
+        )}
       </button>
 
       {open && (
@@ -109,7 +121,11 @@ function NotificationBell() {
           <div className="notif-head">
             <strong>Notifications</strong>
             {items.length > 0 && (
-              <button type="button" className="notif-link-btn" onClick={dismissAll}>
+              <button
+                type="button"
+                className="notif-link-btn"
+                onClick={dismissAll}
+              >
                 Clear all
               </button>
             )}
