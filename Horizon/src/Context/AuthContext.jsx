@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from "react";
 import { mockUsers } from "../Data/mockUsers";
 
@@ -8,7 +9,7 @@ const loadRegisteredUsers = () => {
   if (stored) {
     try {
       return JSON.parse(stored);
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -82,7 +83,6 @@ export function AuthProvider({ children }) {
     setRegisteredUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, role: "admin" } : u)),
     );
-    // If the promoted user is currently logged in, update current user too
     if (user && user.id === userId) {
       setUser((prev) => ({ ...prev, role: "admin" }));
       localStorage.setItem(

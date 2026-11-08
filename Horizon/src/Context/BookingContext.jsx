@@ -1,19 +1,16 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useReducer, useEffect } from "react";
 
 const BookingContext = createContext();
 
-const initialState = {
-  bookings: [],
-};
-
 function bookingReducer(state, action) {
   switch (action.type) {
-    case 'ADD_BOOKING':
+    case "ADD_BOOKING":
       return {
         ...state,
         bookings: [...state.bookings, action.payload],
       };
-    case 'ADD_FOOD_ORDER':
+    case "ADD_FOOD_ORDER":
       return {
         ...state,
         bookings: state.bookings.map((booking) =>
@@ -25,16 +22,16 @@ function bookingReducer(state, action) {
                   action.payload.foodOrder,
                 ],
               }
-            : booking
+            : booking,
         ),
       };
-    case 'CANCEL_BOOKING':
+    case "CANCEL_BOOKING":
       return {
         ...state,
         bookings: state.bookings.map((booking) =>
           booking.id === action.payload
-            ? { ...booking, status: 'cancelled' }
-            : booking
+            ? { ...booking, status: "cancelled" }
+            : booking,
         ),
       };
     default:
@@ -42,25 +39,31 @@ function bookingReducer(state, action) {
   }
 }
 
-// Safe JSON parsing
-const storedBookings = localStorage.getItem('horizon_bookings');
-let initialBookings = { bookings: [] };
-if (storedBookings) {
+// Safe JSON parsing of saved bookings
+function loadBookings() {
+  const stored = localStorage.getItem("horizon_bookings");
+  if (!stored) return { bookings: [] };
+
   try {
-    initialBookings = JSON.parse(storedBookings);
-    if (!initialBookings.bookings || !Array.isArray(initialBookings.bookings)) {
-      initialBookings = { bookings: [] };
+    const parsed = JSON.parse(stored);
+    if (!parsed.bookings || !Array.isArray(parsed.bookings)) {
+      return { bookings: [] };
     }
-  } catch (e) {
-    initialBookings = { bookings: [] };
+    return parsed;
+  } catch {
+    return { bookings: [] };
   }
 }
 
 export function BookingProvider({ children }) {
-  const [state, dispatch] = useReducer(bookingReducer, initialBookings);
+  const [state, dispatch] = useReducer(
+    bookingReducer,
+    undefined,
+    loadBookings,
+  );
 
   useEffect(() => {
-    localStorage.setItem('horizon_bookings', JSON.stringify(state));
+    localStorage.setItem("horizon_bookings", JSON.stringify(state));
   }, [state]);
 
   return (

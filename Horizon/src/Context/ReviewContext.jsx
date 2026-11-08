@@ -1,15 +1,16 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from "react";
 
 const ReviewContext = createContext();
 
 export function ReviewProvider({ children }) {
   const [reviews, setReviews] = useState(() => {
-    const stored = localStorage.getItem('horizon_reviews');
+    const stored = localStorage.getItem("horizon_reviews");
     return stored ? JSON.parse(stored) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem('horizon_reviews', JSON.stringify(reviews));
+    localStorage.setItem("horizon_reviews", JSON.stringify(reviews));
   }, [reviews]);
 
   const addReview = (eventId, userId, rating, comment) => {
@@ -36,7 +37,9 @@ export function ReviewProvider({ children }) {
   };
 
   return (
-    <ReviewContext.Provider value={{ reviews, addReview, getReviewsForEvent, getAverageRating }}>
+    <ReviewContext.Provider
+      value={{ reviews, addReview, getReviewsForEvent, getAverageRating }}
+    >
       {children}
     </ReviewContext.Provider>
   );

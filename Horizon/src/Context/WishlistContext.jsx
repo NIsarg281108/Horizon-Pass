@@ -1,22 +1,23 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from "react";
 
 const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
   const [wishlist, setWishlist] = useState(() => {
-    const stored = localStorage.getItem('horizon_wishlist');
+    const stored = localStorage.getItem("horizon_wishlist");
     return stored ? JSON.parse(stored) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem('horizon_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem("horizon_wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
   const toggleWishlist = (eventId) => {
     setWishlist((prev) =>
       prev.includes(eventId)
         ? prev.filter((id) => id !== eventId)
-        : [...prev, eventId]
+        : [...prev, eventId],
     );
   };
 

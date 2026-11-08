@@ -1,4 +1,4 @@
-// src/Context/ThemeContext.jsx
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
@@ -21,7 +21,6 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     localStorage.setItem("horizon_theme", theme);
-    // Bootstrap and index.css both switch on this attribute
     document.documentElement.setAttribute("data-bs-theme", theme);
   }, [theme]);
 
