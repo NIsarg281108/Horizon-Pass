@@ -3,92 +3,26 @@ import { useEvents } from "../../Context/EventContext";
 import { useReviews } from "../../Context/ReviewContext";
 import EventCard from "./EventCard";
 import FilterBar from "./FilterBar";
+import {
+  DEFAULT_FILTERS,
+  applyEventFilters,
+  sortEvents,
+} from "../../Utils/filters";
 
 function CategoryPage({ category, title, icon }) {
   const { state } = useEvents();
   const { getAverageRating } = useReviews();
-  const [filters, setFilters] = useState({
-    priceRange: "all",
-    availability: "all",
-    rating: "all",
-  });
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState("popular");
 
   const categoryEvents = useMemo(() => {
-    let events = state.events.filter((event) => {
-      if (category === "Resorts") {
-        return event.category === "Resorts & Hotels";
-      }
-      return event.category === category;
-    });
-
-    // Apply filters
-    events = events.filter((event) => {
-      // Price filter
-      if (filters.priceRange !== "all") {
-        if (filters.priceRange === "0-25" && event.price >= 25) return false;
-        if (
-          filters.priceRange === "25-50" &&
-          (event.price < 25 || event.price >= 50)
-        )
-          return false;
-        if (
-          filters.priceRange === "50-100" &&
-          (event.price < 50 || event.price >= 100)
-        )
-          return false;
-        if (filters.priceRange === "100+" && event.price < 100) return false;
-      }
-
-      // Availability filter
-      if (filters.availability !== "all") {
-        if (
-          filters.availability === "available" &&
-          event.availableTickets === 0
-        )
-          return false;
-        if (
-          filters.availability === "limited" &&
-          event.availableTickets >= event.totalTickets * 0.3
-        )
-          return false;
-        if (filters.availability === "sold-out" && event.availableTickets > 0)
-          return false;
-      }
-
-      // Rating filter
-      if (filters.rating !== "all") {
-        const rating = getAverageRating(event.id);
-        if (filters.rating === "4" && rating < 4) return false;
-        if (filters.rating === "3" && rating < 3) return false;
-        if (filters.rating === "2" && rating < 2) return false;
-      }
-
-      return true;
-    });
-
-    // Apply sorting
-    events = [...events].sort((a, b) => {
-      switch (sortBy) {
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "rating":
-          return getAverageRating(b.id) - getAverageRating(a.id);
-        case "date":
-          return new Date(a.date) - new Date(b.date);
-        case "popular":
-        default:
-          return (
-            b.totalTickets -
-            b.availableTickets -
-            (a.totalTickets - a.availableTickets)
-          );
-      }
-    });
-
-    return events;
+    const inCategory = state.events.filter((event) =>
+      category === "Resorts"
+        ? event.category === "Resorts & Hotels"
+        : event.category === category,
+    );
+    const filtered = applyEventFilters(inCategory, filters, getAverageRating);
+    return sortEvents(filtered, sortBy, getAverageRating);
   }, [state.events, category, filters, sortBy, getAverageRating]);
 
   return (

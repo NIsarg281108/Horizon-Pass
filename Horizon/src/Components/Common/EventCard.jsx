@@ -6,57 +6,66 @@ import ProgressiveImage from "./ProgressiveImage";
 function EventCard({ event }) {
   const { wishlist, toggleWishlist } = useWishlist();
   const { getAverageRating } = useReviews();
+
   const isWished = wishlist.includes(event.id);
   const avgRating = getAverageRating(event.id);
+  const stars = Math.round(avgRating);
+  const isResort = event.category === "Resorts & Hotels";
+  const isSoldOut = event.availableTickets === 0;
+  const isLimited = !isSoldOut && event.availableTickets < 20;
 
   return (
-    <div className="card h-100 shadow-sm position-relative">
-      <button
-        className="btn btn-light position-absolute top-0 end-0 m-2 rounded-circle"
-        onClick={() => toggleWishlist(event.id)}
-        style={{ zIndex: 10 }}
-      >
-        {isWished ? "❤️" : "🤍"}
-      </button>
-      <ProgressiveImage
-        src={event.imageUrl}
-        alt={event.title}
-        className="card-img-top"
-        style={{ height: "200px", objectFit: "cover" }}
-      />
-      <div className="card-body">
-        <div className="d-flex justify-content-between align-items-start mb-2">
-          <span className="badge bg-primary">{event.category}</span>
-          {event.availableTickets < 20 && (
-            <span className="badge bg-warning text-dark">Few left</span>
-          )}
-        </div>
-        <h5 className="card-title">{event.title}</h5>
-        <p className="card-text text-muted small mb-1">{event.venue}</p>
-        <p className="card-text small text-muted">
-          {event.date} • {event.time}
+    <article className="event-card">
+      <div className="event-card-media">
+        <ProgressiveImage
+          src={event.imageUrl}
+          alt={event.title}
+          className="event-card-img"
+        />
+
+        <span className="event-card-category">{event.category}</span>
+
+        <button
+          type="button"
+          className={`event-card-wish ${isWished ? "active" : ""}`}
+          onClick={() => toggleWishlist(event.id)}
+          aria-label={isWished ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={isWished}
+        >
+          {isWished ? "♥" : "♡"}
+        </button>
+
+        {isLimited && <span className="event-card-flag">Few left</span>}
+        {isSoldOut && <span className="event-card-flag sold">Sold out</span>}
+      </div>
+
+      <div className="event-card-body">
+        <h3 className="event-card-title">{event.title}</h3>
+        <p className="event-card-meta">📍 {event.venue}</p>
+        <p className="event-card-meta">
+          🗓 {event.date}
+          {event.time ? ` · ${event.time}` : ""}
         </p>
-        <div className="d-flex justify-content-between align-items-center">
+
+        <div className="event-card-footer">
           <div>
-            <span className="fw-bold">
+            <div className="event-card-price">
               ${event.price}
-              {event.category === "Resorts & Hotels" ? "/night" : ""}
-            </span>
-            <div className="text-warning small">
-              {"★".repeat(Math.round(avgRating))}
-              {"☆".repeat(5 - Math.round(avgRating))}
-              <span className="text-muted ms-1">({avgRating.toFixed(1)})</span>
+              {isResort && <span>/night</span>}
+            </div>
+            <div className="event-card-rating">
+              {"★".repeat(stars)}
+              {"☆".repeat(5 - stars)}
+              <span>{avgRating.toFixed(1)}</span>
             </div>
           </div>
-          <Link
-            to={`/event/${event.id}`}
-            className="btn btn-sm btn-outline-primary"
-          >
+
+          <Link to={`/event/${event.id}`} className="event-card-btn">
             Details
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 

@@ -1,32 +1,28 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPlaceholderImage } from "../../Utils/Helpers";
 
-function ProgressiveImage({ src, alt, className, style, ...props }) {
-  const fallbackSrc = createPlaceholderImage(alt || "Event", [
-    "#6d5efb",
-    "#3ecf8e",
-  ]);
+function ProgressiveImage({ src, alt, className = "", style, ...props }) {
+  const fallbackSrc = useMemo(
+    () => createPlaceholderImage(alt || "Event", ["#6d5efb", "#3ecf8e"]),
+    [alt],
+  );
+
   const [imageSrc, setImageSrc] = useState(src || fallbackSrc);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const safeSrc = src || fallbackSrc;
+    const target = src || fallbackSrc;
     const img = new Image();
 
     img.onload = () => {
-      setImageSrc(safeSrc);
-      setImageLoaded(true);
-      setImageError(false);
+      setImageSrc(target);
+      setLoaded(true);
     };
-
     img.onerror = () => {
       setImageSrc(fallbackSrc);
-      setImageLoaded(true);
-      setImageError(true);
+      setLoaded(true);
     };
-
-    img.src = safeSrc;
+    img.src = target;
 
     return () => {
       img.onload = null;
@@ -36,28 +32,17 @@ function ProgressiveImage({ src, alt, className, style, ...props }) {
 
   return (
     <div className="progressive-image-wrapper" style={style}>
-      {!imageLoaded && (
-        <div className="progressive-image-placeholder">
-          <div className="placeholder-shimmer"></div>
-        </div>
+      {!loaded && (
+        <div className="progressive-image-placeholder" aria-hidden="true" />
       )}
       <img
-        src={imageSrc || fallbackSrc}
+        src={imageSrc}
         alt={alt}
-        className={`progressive-image ${imageLoaded ? "loaded" : ""} ${className || ""}`}
-        style={{
-          opacity: imageLoaded ? 1 : 0,
-          transition: "opacity 0.3s ease",
-          objectFit: "cover",
-        }}
-        onError={() => {
-          setImageSrc(fallbackSrc);
-          setImageLoaded(true);
-          setImageError(true);
-        }}
+        loading="lazy"
+        className={`progressive-image ${loaded ? "loaded" : ""} ${className}`}
+        onError={() => setImageSrc(fallbackSrc)}
         {...props}
       />
-      {imageError && <div className="sr-only">Image not available</div>}
     </div>
   );
 }

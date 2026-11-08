@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { findCoupon, calculateDiscount } from "../Data/mockCoupons";
 
-const MERCHANT_UPI_ID = '9987645607@fam';
-const MERCHANT_NAME = 'Horizon Pass';
+const MERCHANT_UPI_ID = "9987645607@fam";
+const MERCHANT_NAME = "Horizon Pass";
 
 function Checkout() {
   const location = useLocation();
@@ -10,24 +11,43 @@ function Checkout() {
   const { bookingData } = location.state || {};
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('credit');
+  const [paymentMethod, setPaymentMethod] = useState("credit");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [cardName, setCardName] = useState("");
 
   const [errors, setErrors] = useState({});
 
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponMessage, setCouponMessage] = useState(null);
+
+  const subtotal = bookingData?.totalPrice ?? 0;
+  const quantity = bookingData?.quantity ?? 0;
+  const discount = calculateDiscount(appliedCoupon, subtotal, quantity);
+  const finalTotal = Math.max(0, subtotal - discount);
+
+  // The booking used everywhere below, with the coupon applied
+  const booking = bookingData
+    ? {
+        ...bookingData,
+        totalPrice: finalTotal,
+        discount,
+        couponCode: appliedCoupon?.code ?? null,
+      }
+    : null;
+
   const upiQrUrl = useMemo(() => {
-    if (paymentMethod === 'upi' && bookingData) {
-      const amount = bookingData.totalPrice.toFixed(2);
+    if (paymentMethod === "upi" && finalTotal > 0) {
+      const amount = finalTotal.toFixed(2);
       const upiString = `upi://pay?pa=${MERCHANT_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount}&cu=INR`;
       return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
     }
-    return '';
-  }, [paymentMethod, bookingData]);
+    return "";
+  }, [paymentMethod, finalTotal]);
 
   if (!bookingData) {
     return (
@@ -35,7 +55,7 @@ function Checkout() {
         <div className="error-content">
           <h3>⚠️ No booking data found</h3>
           <p>Please go back and select an event to book.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+          <button className="btn btn-primary" onClick={() => navigate("/")}>
             Go to Home
           </button>
         </div>
@@ -43,33 +63,67 @@ function Checkout() {
     );
   }
 
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim();
+    if (!code) return;
+
+    const coupon = findCoupon(code);
+    if (!coupon) {
+      setAppliedCoupon(null);
+      setCouponMessage({ type: "err", text: "That code isn't valid." });
+      return;
+    }
+    if (quantity < coupon.minTickets) {
+      setAppliedCoupon(null);
+      setCouponMessage({
+        type: "err",
+        text: `${coupon.code} needs at least ${coupon.minTickets} tickets.`,
+      });
+      return;
+    }
+
+    setAppliedCoupon(coupon);
+    setCouponMessage({
+      type: "ok",
+      text: `${coupon.code} applied: ${coupon.description}.`,
+    });
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponMessage(null);
+  };
+
   const validateCreditCard = () => {
     const newErrors = {};
-    const cardNumberClean = cardNumber.replace(/\s+/g, '');
-    
+    const cardNumberClean = cardNumber.replace(/\s+/g, "");
+
     if (!cardName.trim()) {
-      newErrors.cardName = 'Cardholder name is required';
+      newErrors.cardName = "Cardholder name is required";
     }
-    
     if (!/^\d{16}$/.test(cardNumberClean)) {
-      newErrors.cardNumber = 'Card number must be 16 digits';
+      newErrors.cardNumber = "Card number must be 16 digits";
     }
 
     const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     if (!expiryRegex.test(expiry)) {
-      newErrors.expiry = 'Expiry must be MM/YY';
+      newErrors.expiry = "Expiry must be MM/YY";
     } else {
-      const [month, year] = expiry.split('/');
+      const [month, year] = expiry.split("/");
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear() % 100;
       const currentMonth = currentDate.getMonth() + 1;
-      if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-        newErrors.expiry = 'Card is expired';
+      if (
+        parseInt(year) < currentYear ||
+        (parseInt(year) === currentYear && parseInt(month) < currentMonth)
+      ) {
+        newErrors.expiry = "Card is expired";
       }
     }
 
     if (!/^\d{3}$/.test(cvv)) {
-      newErrors.cvv = 'CVV must be 3 digits';
+      newErrors.cvv = "CVV must be 3 digits";
     }
 
     return newErrors;
@@ -80,7 +134,7 @@ function Checkout() {
       setCurrentStep(2);
     } else if (currentStep === 2) {
       let validationErrors = {};
-      if (paymentMethod === 'credit') {
+      if (paymentMethod === "credit") {
         validationErrors = validateCreditCard();
       }
 
@@ -99,7 +153,12 @@ function Checkout() {
     setIsProcessing(true);
 
     setTimeout(() => {
-      navigate('/payment-success', { state: { bookingData } });
+      navigate("/payment-success", {
+        state: {
+          bookingData: booking,
+          paymentId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        },
+      });
     }, 2000);
   };
 
@@ -109,10 +168,17 @@ function Checkout() {
   };
 
   const steps = [
-    { number: 1, title: 'Order Summary' },
-    { number: 2, title: 'Payment' },
-    { number: 3, title: 'Confirm' },
+    { number: 1, title: "Order Summary" },
+    { number: 2, title: "Payment" },
+    { number: 3, title: "Confirm" },
   ];
+
+  const paymentLabel =
+    paymentMethod === "credit"
+      ? "Credit/Debit Card"
+      : paymentMethod === "upi"
+        ? "UPI"
+        : "PayPal";
 
   return (
     <div className="checkout-page">
@@ -122,7 +188,7 @@ function Checkout() {
           {steps.map((step) => (
             <div
               key={step.number}
-              className={`step ${currentStep >= step.number ? 'active' : ''} ${currentStep === step.number ? 'current' : ''}`}
+              className={`step ${currentStep >= step.number ? "active" : ""} ${currentStep === step.number ? "current" : ""}`}
             >
               <div className="step-number">{step.number}</div>
               <div className="step-title">{step.title}</div>
@@ -133,59 +199,114 @@ function Checkout() {
 
       <div className="checkout-content">
         <div className="checkout-main">
-          {/* Step 1: Order Summary */}
+          {/* Step 1: Order summary and coupon */}
           {currentStep === 1 && (
             <div className="checkout-card">
               <h2>Order Summary</h2>
               <div className="order-summary">
                 <div className="order-item">
                   <img
-                    src={bookingData.imageUrl}
-                    alt={bookingData.title}
+                    src={booking.imageUrl}
+                    alt={booking.title}
                     className="order-image"
                   />
                   <div className="order-details">
-                    <h3>{bookingData.title}</h3>
+                    <h3>{booking.title}</h3>
                     <p className="order-meta">
-                      {bookingData.venue} • {bookingData.date} • {bookingData.time}
+                      {booking.venue} • {booking.date} • {booking.time}
                     </p>
                     <div className="order-specs">
                       <span className="spec-item">
-                        <strong>Tier:</strong> {bookingData.tier}
+                        <strong>Tier:</strong> {booking.tier}
                       </span>
                       <span className="spec-item">
-                        <strong>Quantity:</strong> {bookingData.quantity}
+                        <strong>Quantity:</strong> {booking.quantity}
                       </span>
+                      {booking.seats?.length > 0 && (
+                        <span className="spec-item">
+                          <strong>Seats:</strong> {booking.seats.join(", ")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
+                <div className="coupon-box">
+                  <label className="form-label" htmlFor="coupon">
+                    Coupon code
+                  </label>
+                  <div className="coupon-row">
+                    <input
+                      id="coupon"
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter a code"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      disabled={!!appliedCoupon}
+                    />
+                    {appliedCoupon ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={handleRemoveCoupon}
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary"
+                        onClick={handleApplyCoupon}
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </div>
+                  {couponMessage && (
+                    <p className={`coupon-message ${couponMessage.type}`}>
+                      {couponMessage.text}
+                    </p>
+                  )}
+                </div>
+
                 <div className="order-breakdown">
                   <div className="breakdown-row">
-                    <span>Base Price</span>
-                    <span>${(bookingData.totalPrice / bookingData.quantity).toFixed(2)}</span>
+                    <span>Base price</span>
+                    <span>${(subtotal / quantity).toFixed(2)}</span>
                   </div>
                   <div className="breakdown-row">
                     <span>Quantity</span>
-                    <span>x{bookingData.quantity}</span>
+                    <span>x{quantity}</span>
                   </div>
+                  {discount > 0 && (
+                    <div className="breakdown-row discount">
+                      <span>Discount ({appliedCoupon.code})</span>
+                      <span>−${discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="breakdown-row">
-                    <span>Service Fee</span>
+                    <span>Service fee</span>
                     <span>$0.00</span>
                   </div>
                   <div className="breakdown-row total">
                     <strong>Total</strong>
-                    <strong className="total-amount">${bookingData.totalPrice.toFixed(2)}</strong>
+                    <strong className="total-amount">
+                      ${finalTotal.toFixed(2)}
+                    </strong>
                   </div>
                 </div>
               </div>
 
               <div className="checkout-actions">
-                <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => navigate(-1)}
+                >
                   Back
                 </button>
                 <button className="btn btn-primary" onClick={handleNextStep}>
-                  Continue to Payment
+                  Continue to payment
                 </button>
               </div>
             </div>
@@ -195,11 +316,11 @@ function Checkout() {
           {currentStep === 2 && (
             <div className="checkout-card">
               <h2>Payment Method</h2>
-              
+
               <div className="payment-methods">
                 <div
-                  className={`payment-method ${paymentMethod === 'credit' ? 'active' : ''}`}
-                  onClick={() => handlePaymentMethodChange('credit')}
+                  className={`payment-method ${paymentMethod === "credit" ? "active" : ""}`}
+                  onClick={() => handlePaymentMethodChange("credit")}
                 >
                   <div className="payment-icon">💳</div>
                   <div className="payment-info">
@@ -210,15 +331,15 @@ function Checkout() {
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'credit'}
-                      onChange={() => handlePaymentMethodChange('credit')}
+                      checked={paymentMethod === "credit"}
+                      onChange={() => handlePaymentMethodChange("credit")}
                     />
                   </div>
                 </div>
 
                 <div
-                  className={`payment-method ${paymentMethod === 'upi' ? 'active' : ''}`}
-                  onClick={() => handlePaymentMethodChange('upi')}
+                  className={`payment-method ${paymentMethod === "upi" ? "active" : ""}`}
+                  onClick={() => handlePaymentMethodChange("upi")}
                 >
                   <div className="payment-icon">📱</div>
                   <div className="payment-info">
@@ -229,15 +350,15 @@ function Checkout() {
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'upi'}
-                      onChange={() => handlePaymentMethodChange('upi')}
+                      checked={paymentMethod === "upi"}
+                      onChange={() => handlePaymentMethodChange("upi")}
                     />
                   </div>
                 </div>
 
                 <div
-                  className={`payment-method ${paymentMethod === 'paypal' ? 'active' : ''}`}
-                  onClick={() => handlePaymentMethodChange('paypal')}
+                  className={`payment-method ${paymentMethod === "paypal" ? "active" : ""}`}
+                  onClick={() => handlePaymentMethodChange("paypal")}
                 >
                   <div className="payment-icon">🅿️</div>
                   <div className="payment-info">
@@ -248,110 +369,142 @@ function Checkout() {
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'paypal'}
-                      onChange={() => handlePaymentMethodChange('paypal')}
+                      checked={paymentMethod === "paypal"}
+                      onChange={() => handlePaymentMethodChange("paypal")}
                     />
                   </div>
                 </div>
               </div>
 
-              {paymentMethod === 'credit' && (
+              {paymentMethod === "credit" && (
                 <div className="card-details">
-                  <h3>Card Details</h3>
+                  <h3>Card details</h3>
                   <div className="form-group">
-                    <label>Cardholder Name</label>
+                    <label>Cardholder name</label>
                     <input
                       type="text"
-                      className={`form-control ${errors.cardName ? 'is-invalid' : ''}`}
+                      className={`form-control ${errors.cardName ? "is-invalid" : ""}`}
                       placeholder="Name on card"
                       value={cardName}
                       onChange={(e) => setCardName(e.target.value)}
                     />
-                    {errors.cardName && <div className="invalid-feedback">{errors.cardName}</div>}
+                    {errors.cardName && (
+                      <div className="invalid-feedback">{errors.cardName}</div>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Card Number</label>
+                    <label>Card number</label>
                     <input
                       type="text"
-                      className={`form-control ${errors.cardNumber ? 'is-invalid' : ''}`}
+                      className={`form-control ${errors.cardNumber ? "is-invalid" : ""}`}
                       placeholder="1234 5678 9012 3456"
                       value={cardNumber}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                        const value = e.target.value
+                          .replace(/\s/g, "")
+                          .replace(/(.{4})/g, "$1 ")
+                          .trim();
                         setCardNumber(value);
                       }}
                       maxLength="19"
                     />
-                    {errors.cardNumber && <div className="invalid-feedback">{errors.cardNumber}</div>}
+                    {errors.cardNumber && (
+                      <div className="invalid-feedback">
+                        {errors.cardNumber}
+                      </div>
+                    )}
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Expiry Date</label>
+                      <label>Expiry date</label>
                       <input
                         type="text"
-                        className={`form-control ${errors.expiry ? 'is-invalid' : ''}`}
+                        className={`form-control ${errors.expiry ? "is-invalid" : ""}`}
                         placeholder="MM/YY"
                         value={expiry}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
+                          const value = e.target.value.replace(/\D/g, "");
                           if (value.length >= 2) {
-                            setExpiry(value.slice(0, 2) + '/' + value.slice(2, 4));
+                            setExpiry(
+                              value.slice(0, 2) + "/" + value.slice(2, 4),
+                            );
                           } else {
                             setExpiry(value);
                           }
                         }}
                         maxLength="5"
                       />
-                      {errors.expiry && <div className="invalid-feedback">{errors.expiry}</div>}
+                      {errors.expiry && (
+                        <div className="invalid-feedback">{errors.expiry}</div>
+                      )}
                     </div>
                     <div className="form-group">
                       <label>CVV</label>
                       <input
                         type="password"
-                        className={`form-control ${errors.cvv ? 'is-invalid' : ''}`}
+                        className={`form-control ${errors.cvv ? "is-invalid" : ""}`}
                         placeholder="123"
                         value={cvv}
-                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) =>
+                          setCvv(e.target.value.replace(/\D/g, ""))
+                        }
                         maxLength="3"
                       />
-                      {errors.cvv && <div className="invalid-feedback">{errors.cvv}</div>}
+                      {errors.cvv && (
+                        <div className="invalid-feedback">{errors.cvv}</div>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              {paymentMethod === 'upi' && (
+              {paymentMethod === "upi" && (
                 <div className="upi-details">
-                  <h3>Scan to Pay</h3>
+                  <h3>Scan to pay</h3>
                   <div className="qr-container">
-                    <img src={upiQrUrl} alt="UPI QR Code" className="qr-code" />
+                    <img
+                      src={upiQrUrl}
+                      alt="UPI QR code"
+                      className="qr-code"
+                    />
                   </div>
                   <div className="upi-info">
-                    <p><strong>Merchant UPI ID:</strong> {MERCHANT_UPI_ID}</p>
-                    <p><strong>Amount:</strong> ${bookingData.totalPrice.toFixed(2)}</p>
+                    <p>
+                      <strong>Merchant UPI ID:</strong> {MERCHANT_UPI_ID}
+                    </p>
+                    <p>
+                      <strong>Amount:</strong> ${finalTotal.toFixed(2)}
+                    </p>
                   </div>
                   <div className="alert alert-info">
                     <small>
-                      <strong>Note:</strong> This QR code is real and will directly send the payment to your UPI ID when scanned.
+                      <strong>Note:</strong> This QR code is real and will
+                      directly send the payment to your UPI ID when scanned.
                     </small>
                   </div>
                 </div>
               )}
 
-              {paymentMethod === 'paypal' && (
+              {paymentMethod === "paypal" && (
                 <div className="paypal-details">
                   <div className="alert alert-info">
-                    <p className="mb-0">You will be redirected to PayPal to complete the payment securely.</p>
+                    <p className="mb-0">
+                      You will be redirected to PayPal to complete the payment
+                      securely.
+                    </p>
                   </div>
                 </div>
               )}
 
               <div className="checkout-actions">
-                <button className="btn btn-secondary" onClick={() => setCurrentStep(1)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setCurrentStep(1)}
+                >
                   Back
                 </button>
                 <button className="btn btn-primary" onClick={handleNextStep}>
-                  Review Order
+                  Review order
                 </button>
               </div>
             </div>
@@ -360,39 +513,60 @@ function Checkout() {
           {/* Step 3: Confirm */}
           {currentStep === 3 && (
             <div className="checkout-card">
-              <h2>Confirm Your Order</h2>
-              
+              <h2>Confirm your order</h2>
+
               <div className="order-confirmation">
                 <div className="confirm-item">
                   <span className="confirm-label">Event</span>
-                  <span className="confirm-value">{bookingData.title}</span>
+                  <span className="confirm-value">{booking.title}</span>
                 </div>
                 <div className="confirm-item">
                   <span className="confirm-label">Venue</span>
-                  <span className="confirm-value">{bookingData.venue}</span>
+                  <span className="confirm-value">{booking.venue}</span>
                 </div>
                 <div className="confirm-item">
-                  <span className="confirm-label">Date & Time</span>
-                  <span className="confirm-value">{bookingData.date} at {bookingData.time}</span>
+                  <span className="confirm-label">Date & time</span>
+                  <span className="confirm-value">
+                    {booking.date} at {booking.time}
+                  </span>
                 </div>
                 <div className="confirm-item">
                   <span className="confirm-label">Tier</span>
-                  <span className="confirm-value">{bookingData.tier}</span>
+                  <span className="confirm-value">{booking.tier}</span>
                 </div>
                 <div className="confirm-item">
                   <span className="confirm-label">Quantity</span>
-                  <span className="confirm-value">{bookingData.quantity} ticket(s)</span>
-                </div>
-                <div className="confirm-item">
-                  <span className="confirm-label">Payment Method</span>
                   <span className="confirm-value">
-                    {paymentMethod === 'credit' ? 'Credit/Debit Card' : 
-                     paymentMethod === 'upi' ? 'UPI' : 'PayPal'}
+                    {booking.quantity} ticket(s)
                   </span>
                 </div>
+                {booking.seats?.length > 0 && (
+                  <div className="confirm-item">
+                    <span className="confirm-label">Seats</span>
+                    <span className="confirm-value">
+                      {booking.seats.join(", ")}
+                    </span>
+                  </div>
+                )}
+                {discount > 0 && (
+                  <div className="confirm-item">
+                    <span className="confirm-label">
+                      Discount ({appliedCoupon.code})
+                    </span>
+                    <span className="confirm-value">
+                      −${discount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="confirm-item">
+                  <span className="confirm-label">Payment method</span>
+                  <span className="confirm-value">{paymentLabel}</span>
+                </div>
                 <div className="confirm-item total">
-                  <span className="confirm-label">Total Amount</span>
-                  <span className="confirm-value total-amount">${bookingData.totalPrice.toFixed(2)}</span>
+                  <span className="confirm-label">Total amount</span>
+                  <span className="confirm-value total-amount">
+                    ${finalTotal.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -406,7 +580,10 @@ function Checkout() {
               </div>
 
               <div className="checkout-actions">
-                <button className="btn btn-secondary" onClick={() => setCurrentStep(2)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setCurrentStep(2)}
+                >
                   Back
                 </button>
                 <button
@@ -420,7 +597,7 @@ function Checkout() {
                       Processing...
                     </>
                   ) : (
-                    `Pay $${bookingData.totalPrice.toFixed(2)}`
+                    `Pay $${finalTotal.toFixed(2)}`
                   )}
                 </button>
               </div>
@@ -428,41 +605,49 @@ function Checkout() {
           )}
         </div>
 
-        {/* Order Summary Sidebar */}
         <div className="checkout-sidebar">
           <div className="sidebar-card">
-            <h3>Order Summary</h3>
+            <h3>Order summary</h3>
             <div className="sidebar-item">
               <img
-                src={bookingData.imageUrl}
-                alt={bookingData.title}
+                src={booking.imageUrl}
+                alt={booking.title}
                 className="sidebar-image"
               />
               <div className="sidebar-details">
-                <strong>{bookingData.title}</strong>
-                <p className="text-muted mb-0">{bookingData.venue}</p>
+                <strong>{booking.title}</strong>
+                <p className="text-muted mb-0">{booking.venue}</p>
               </div>
             </div>
             <div className="sidebar-breakdown">
               <div className="breakdown-row">
-                <span>{bookingData.quantity}x {bookingData.tier}</span>
-                <span>${bookingData.totalPrice.toFixed(2)}</span>
+                <span>
+                  {booking.quantity}x {booking.tier}
+                </span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
+              {discount > 0 && (
+                <div className="breakdown-row discount">
+                  <span>Discount</span>
+                  <span>−${discount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="breakdown-row">
-                <span>Service Fee</span>
+                <span>Service fee</span>
                 <span>$0.00</span>
               </div>
               <div className="breakdown-row total">
                 <strong>Total</strong>
-                <strong>${bookingData.totalPrice.toFixed(2)}</strong>
+                <strong>${finalTotal.toFixed(2)}</strong>
               </div>
             </div>
           </div>
 
           <div className="sidebar-card security-info">
-            <h4>🔒 Secure Payment</h4>
+            <h4>🔒 Secure payment</h4>
             <p className="text-muted mb-0">
-              Your payment information is encrypted and secure. We use industry-standard security measures to protect your data.
+              Your payment information is encrypted and secure. We use
+              industry-standard security measures to protect your data.
             </p>
           </div>
         </div>

@@ -5,14 +5,67 @@ import { useReviews } from "../../Context/ReviewContext";
 import { useWishlist } from "../../Context/WishlistContext";
 import { useMemo, useState } from "react";
 import RevenueChart from "./RevenueChart";
+import {
+  RANGE_OPTIONS,
+  comparePeriods,
+  countUsersInRange,
+  growth,
+  fmtChange,
+} from "../../Utils/analytics";
+import { downloadCsv } from "../../Utils/csv";
 
 function AdminDashboard() {
   const { state: eventState } = useEvents();
-  const { state: bookingState } = useBookings();
+  const { state: rawBookingState } = useBookings();
   const { registeredUsers } = useAuth();
   const { getAverageRating } = useReviews();
   const { wishlist } = useWishlist();
-  const [timeRange, setTimeRange] = useState("7days");
+  const [timeRange, setTimeRange] = useState("7");
+
+  // All the dashboard maths below use only bookings in the selected range
+  const periods = useMemo(
+    () => comparePeriods(rawBookingState.bookings, timeRange),
+    [rawBookingState.bookings, timeRange],
+  );
+
+  const bookingState = useMemo(
+    () => ({ bookings: periods.current }),
+    [periods],
+  );
+
+  const userCounts = useMemo(
+    () => countUsersInRange(registeredUsers, timeRange),
+    [registeredUsers, timeRange],
+  );
+
+  const sumRevenue = (list) =>
+    list.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+  const changes = {
+    revenue: growth(sumRevenue(periods.current), sumRevenue(periods.previous)),
+    bookings: growth(periods.current.length, periods.previous.length),
+    users: growth(userCounts.current, userCounts.previous),
+  };
+
+  const exportRevenue = () => {
+    if (!periods.current.length) {
+      alert("No bookings in this period.");
+      return;
+    }
+    const rows = periods.current.map((b) => ({
+      booking_id: b.id,
+      booking_date: b.bookingDate || "",
+      event: b.title,
+      category: b.category,
+      quantity: b.quantity,
+      total_paid: Number(b.totalPrice || 0).toFixed(2),
+      status: b.status,
+    }));
+    downloadCsv(
+      `revenue-${timeRange}-${new Date().toISOString().slice(0, 10)}.csv`,
+      rows,
+    );
+  };
 
   const totalEvents = eventState.events.length;
   const totalBookings = bookingState.bookings.length;
@@ -123,22 +176,30 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard-enhanced">
       <div className="dashboard-header">
-        <h2>📊 Admin Dashboard</h2>
-        <div className="time-range-selector">
+        <h2>📊 Admin dashboard</h2>
+        <div className="d-flex gap-2 flex-wrap">
           <select
             className="form-select"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
           >
-            <option value="7days">Last 7 days</option>
-            <option value="30days">Last 30 days</option>
-            <option value="90days">Last 90 days</option>
-            <option value="all">All time</option>
+            {RANGE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
+          <button
+            type="button"
+            className="btn btn-outline-primary"
+            onClick={exportRevenue}
+          >
+            ⬇ Export CSV
+          </button>
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* Key metrics */}
       <div className="metrics-grid">
         <div className="metric-card revenue">
           <div className="metric-icon">💰</div>
@@ -146,68 +207,80 @@ function AdminDashboard() {
             <div className="metric-value">
               ${analytics.totalRevenue.toFixed(2)}
             </div>
-            <div className="metric-label">Total Revenue</div>
-            <div className="metric-change positive">+12.5%</div>
+            <div className="metric-label">Revenue in range</div>
+            <div
+              className={`metric-change ${changes.revenue >= 0 ? "positive" : "negative"}`}
+            >
+              {fmtChange(changes.revenue)}
+            </div>
           </div>
         </div>
         <div className="metric-card bookings">
           <div className="metric-icon">🎫</div>
           <div className="metric-content">
             <div className="metric-value">{totalBookings}</div>
-            <div className="metric-label">Total Bookings</div>
-            <div className="metric-change positive">+8.3%</div>
+            <div className="metric-label">Bookings in range</div>
+            <div
+              className={`metric-change ${changes.bookings >= 0 ? "positive" : "negative"}`}
+            >
+              {fmtChange(changes.bookings)}
+            </div>
           </div>
         </div>
         <div className="metric-card users">
           <div className="metric-icon">👥</div>
           <div className="metric-content">
             <div className="metric-value">{totalUsers}</div>
-            <div className="metric-label">Total Users</div>
-            <div className="metric-change positive">+15.2%</div>
+            <div className="metric-label">Total users</div>
+            <div
+              className={`metric-change ${changes.users >= 0 ? "positive" : "negative"}`}
+            >
+              {fmtChange(changes.users)}
+            </div>
           </div>
         </div>
         <div className="metric-card events">
           <div className="metric-icon">🎭</div>
           <div className="metric-content">
             <div className="metric-value">{totalEvents}</div>
-            <div className="metric-label">Active Events</div>
-            <div className="metric-change neutral">+2 new</div>
+            <div className="metric-label">Active events</div>
+            <div className="metric-change neutral">Not tracked</div>
           </div>
         </div>
       </div>
 
-      {/* Secondary Metrics */}
+      {/* Secondary metrics */}
       <div className="secondary-metrics">
         <div className="secondary-metric">
-          <div className="secondary-label">Average Order Value</div>
+          <div className="secondary-label">Average order value</div>
           <div className="secondary-value">
             ${analytics.avgOrderValue.toFixed(2)}
           </div>
         </div>
         <div className="secondary-metric">
-          <div className="secondary-label">Active Users</div>
+          <div className="secondary-label">Active users</div>
           <div className="secondary-value">{analytics.activeUsers}</div>
         </div>
         <div className="secondary-metric">
-          <div className="secondary-label">Repeat Customers</div>
+          <div className="secondary-label">Repeat customers</div>
           <div className="secondary-value">{analytics.repeatCustomers}</div>
         </div>
         <div className="secondary-metric">
-          <div className="secondary-label">Conversion Rate</div>
+          <div className="secondary-label">Conversion rate</div>
           <div className="secondary-value">
             {analytics.conversionRate.toFixed(1)}%
           </div>
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Charts */}
       <div className="charts-section">
         <div className="chart-card main-chart">
-          <h3>Revenue Overview</h3>
+          <h3>Revenue overview</h3>
           <RevenueChart />
         </div>
         <div className="chart-card category-chart">
-          <h3>Category Performance</h3>
+          <h3>Category performance</h3>
           <div className="category-breakdown">
             {Object.entries(analytics.categoryStats).map(
               ([category, stats]) => (
@@ -223,7 +296,6 @@ function AdminDashboard() {
                       className="category-progress"
                       style={{
                         width: `${stats.bookings > 0 ? (stats.bookings / totalBookings) * 100 : 0}%`,
-                        background: getCategoryColor(category),
                       }}
                     ></div>
                   </div>
@@ -234,9 +306,9 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Top Performing Events */}
+      {/* Top performing events */}
       <div className="top-events-section">
-        <h3>🏆 Top Performing Events</h3>
+        <h3>🏆 Top performing events</h3>
         <div className="top-events-grid">
           {analytics.eventPerformance.slice(0, 4).map((event, index) => (
             <div key={event.id} className="top-event-card">
@@ -273,9 +345,9 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent activity */}
       <div className="recent-activity-section">
-        <h3>📋 Recent Activity</h3>
+        <h3>📋 Recent activity</h3>
         <div className="activity-list">
           {analytics.recentBookings.length === 0 ? (
             <p className="text-muted">No recent activity</p>
@@ -288,7 +360,7 @@ function AdminDashboard() {
                 <div key={booking.id} className="activity-item">
                   <div className="activity-icon">🎫</div>
                   <div className="activity-details">
-                    <strong>{event?.title || "Unknown Event"}</strong>
+                    <strong>{event?.title || "Unknown event"}</strong>
                     <p className="activity-meta">
                       User {booking.userId} • {booking.quantity} tickets • $
                       {booking.totalPrice?.toFixed(2) || "0.00"}
@@ -306,9 +378,9 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Detailed Bookings Table */}
+      {/* Detailed bookings table */}
       <div className="bookings-table-section">
-        <h3>📊 Detailed Bookings</h3>
+        <h3>📊 Detailed bookings</h3>
         <div className="table-responsive">
           <table className="table table-striped bookings-table">
             <thead>
@@ -326,7 +398,7 @@ function AdminDashboard() {
               {Object.keys(bookingsByUser).length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center">
-                    No tickets booked yet.
+                    No tickets booked in this period.
                   </td>
                 </tr>
               ) : (
@@ -349,7 +421,7 @@ function AdminDashboard() {
                         <td>${booking.totalPrice?.toFixed(2) || "0.00"}</td>
                         <td>
                           <span
-                            className={`status-badge ${booking.status || "confirmed"}`}
+                            className={`status-badge ${booking.status === "cancelled" ? "cancelled" : ""}`}
                           >
                             {booking.status || "confirmed"}
                           </span>
@@ -365,17 +437,6 @@ function AdminDashboard() {
       </div>
     </div>
   );
-}
-
-function getCategoryColor(category) {
-  const colors = {
-    Movies: "#e50914",
-    Plays: "#ff6b6b",
-    Activities: "#4ecdc4",
-    Shows: "#ffe66d",
-    "Resorts & Hotels": "#95e1d3",
-  };
-  return colors[category] || "#667eea";
 }
 
 export default AdminDashboard;

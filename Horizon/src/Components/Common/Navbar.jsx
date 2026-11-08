@@ -4,6 +4,7 @@ import { useAuth } from "../../Context/AuthContext";
 import { useTheme } from "../../Context/ThemeContext";
 import { useWishlist } from "../../Context/WishlistContext";
 import { useEvents } from "../../Context/EventContext";
+import NotificationBell from "./NotificationBell";
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -19,7 +20,7 @@ function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${searchQuery.trim()}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
       setSearchExpanded(false);
       setShowSuggestions(false);
@@ -69,7 +70,7 @@ function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark navbar-horizon">
+    <nav className="navbar navbar-expand-lg navbar-horizon">
       <div className="container">
         <Link className="navbar-brand" to="/">
           <span className="brand-icon">🎭</span>
@@ -286,6 +287,9 @@ function Navbar() {
             </li>
             {user ? (
               <>
+                <li className="nav-item">
+                  <NotificationBell />
+                </li>
                 <li className="nav-item d-none d-lg-block">
                   <Link
                     className="nav-link position-relative wishlist-link"

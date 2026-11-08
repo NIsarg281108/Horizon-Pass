@@ -1,91 +1,97 @@
 import { Link } from "react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useEvents } from "../Context/EventContext";
 import { useWishlist } from "../Context/WishlistContext";
 import { useReviews } from "../Context/ReviewContext";
-import { useMemo, useState, useEffect } from "react";
 import EventCard from "../Components/Common/EventCard";
+
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600",
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1600",
+  "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1600",
+  "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600",
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600",
+];
+
+const CATEGORIES = [
+  { name: "Movies", path: "/movies", icon: "🎬", color: "#e50914", match: "Movies" },
+  { name: "Plays", path: "/plays", icon: "🎭", color: "#ff6b6b", match: "Plays" },
+  { name: "Activities", path: "/activities", icon: "🎯", color: "#4ecdc4", match: "Activities" },
+  { name: "Shows", path: "/shows", icon: "🎤", color: "#ffe66d", match: "Shows" },
+  { name: "Resorts", path: "/resorts", icon: "🏨", color: "#95e1d3", match: "Resorts & Hotels" },
+];
 
 function Home() {
   const { user } = useAuth();
   const { state } = useEvents();
   const { wishlist } = useWishlist();
   const { getAverageRating } = useReviews();
-  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  const [heroIndex, setHeroIndex] = useState(0);
 
-  const categories = [
-    { name: "Movies", path: "/movies", icon: "🎬", color: "#e50914" },
-    { name: "Plays", path: "/plays", icon: "🎭", color: "#ff6b6b" },
-    { name: "Activities", path: "/activities", icon: "🎯", color: "#4ecdc4" },
-    { name: "Shows", path: "/shows", icon: "🎤", color: "#ffe66d" },
-    { name: "Resorts", path: "/resorts", icon: "🏨", color: "#95e1d3" },
-  ];
-
-  const categoryImages = useMemo(
-    () => [
-      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
-      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800",
-      "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800",
-      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800",
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
-    ],
-    [],
-  );
-
-  // Slow down hero image rotation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroImageIndex((prev) => (prev + 1) % 5);
-    }, 5000); // Change every 5 seconds instead of on load
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Preload hero images
-  useEffect(() => {
-    categoryImages.forEach((src) => {
+    // Preload hero images so the crossfade is smooth
+    HERO_IMAGES.forEach((src) => {
       const img = new Image();
       img.src = src;
     });
-  }, [categoryImages]);
 
-  const featuredEvents = useMemo(() => {
-    return state.events
-      .filter((event) => event.availableTickets > 0)
-      .sort((a, b) => getAverageRating(b.id) - getAverageRating(a.id))
-      .slice(0, 6);
-  }, [state.events, getAverageRating]);
+    const timer = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % HERO_IMAGES.length);
+    }, 6000);
 
-  const trendingEvents = useMemo(() => {
-    return state.events
-      .filter((event) => event.availableTickets < event.totalTickets * 0.3)
-      .slice(0, 4);
-  }, [state.events]);
+    return () => clearInterval(timer);
+  }, []);
+
+  const featuredEvents = useMemo(
+    () =>
+      state.events
+        .filter((event) => event.availableTickets > 0)
+        .sort((a, b) => getAverageRating(b.id) - getAverageRating(a.id))
+        .slice(0, 6),
+    [state.events, getAverageRating],
+  );
+
+  const trendingEvents = useMemo(
+    () =>
+      state.events
+        .filter(
+          (event) =>
+            event.availableTickets > 0 &&
+            event.availableTickets < event.totalTickets * 0.3,
+        )
+        .slice(0, 4),
+    [state.events],
+  );
+
+  const countFor = (match) =>
+    state.events.filter((event) => event.category === match).length;
 
   return (
     <div>
-      {/* Hero Section */}
-      <div className="hero-section-modern">
+      {/* Hero */}
+      <section className="hero-section-modern">
+        <div className="hero-slides" aria-hidden="true">
+          {HERO_IMAGES.map((src, i) => (
+            <div
+              key={src}
+              className={`hero-slide ${i === heroIndex ? "active" : ""}`}
+              style={{ backgroundImage: `url(${src})` }}
+            />
+          ))}
+        </div>
+        <div className="hero-overlay" />
+
         <div className="hero-content">
-          <div className="hero-badge">✨ Premium Event Booking Platform</div>
-          <h1 className="hero-title">Horizon – Pass</h1>
+          <span className="hero-badge">✨ Horizon – Pass</span>
+          <h1 className="hero-title">
+            Book the show. <span>Stay the night.</span>
+          </h1>
           <p className="hero-subtitle">
-            Book the show. Stay the night. Chase the Horizon.
+            Chase the Horizon: movies, plays, shows, activities and resorts,
+            all in one place.
           </p>
-          <div className="hero-stats">
-            <div className="stat-item">
-              <div className="stat-number">{state.events.length}+</div>
-              <div className="stat-label">Events</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">5</div>
-              <div className="stat-label">Categories</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">24/7</div>
-              <div className="stat-label">Support</div>
-            </div>
-          </div>
+
           <div className="hero-actions">
             {user ? (
               <>
@@ -110,17 +116,25 @@ function Home() {
               </>
             )}
           </div>
-        </div>
-        <div className="hero-image">
-          <img
-            src={categoryImages[heroImageIndex]}
-            alt="Hero"
-            className="hero-img"
-          />
-        </div>
-      </div>
 
-      {/* Welcome Message for Logged-in Users */}
+          <div className="hero-stats">
+            <div>
+              <div className="stat-number">{state.events.length}+</div>
+              <div className="stat-label">Events</div>
+            </div>
+            <div>
+              <div className="stat-number">{CATEGORIES.length}</div>
+              <div className="stat-label">Categories</div>
+            </div>
+            <div>
+              <div className="stat-number">24/7</div>
+              <div className="stat-label">Support</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Welcome banner */}
       {user && (
         <div className="welcome-banner">
           <div className="welcome-content">
@@ -129,7 +143,7 @@ function Home() {
               <h3>Welcome back, {user.name}!</h3>
               <p className="text-muted mb-0">
                 {wishlist.length > 0 &&
-                  `${wishlist.length} events in your wishlist • `}
+                  `${wishlist.length} event${wishlist.length === 1 ? "" : "s"} in your wishlist • `}
                 Ready to discover your next experience?
               </p>
             </div>
@@ -137,41 +151,33 @@ function Home() {
         </div>
       )}
 
-      {/* Category Tiles */}
+      {/* Categories */}
       <section className="categories-section">
         <h2 className="section-title">Explore Categories</h2>
         <div className="category-grid">
-          {categories.map((category) => (
+          {CATEGORIES.map((category) => (
             <Link
               key={category.name}
               to={category.path}
               className="category-tile-modern"
               style={{ "--category-color": category.color }}
             >
-              <div className="category-icon">{category.icon}</div>
-              <div className="category-name">{category.name}</div>
-              <div className="category-count">
-                {
-                  state.events.filter(
-                    (e) =>
-                      e.category === category.name ||
-                      (category.name === "Resorts" &&
-                        e.category === "Resorts & Hotels"),
-                  ).length
-                }{" "}
-                events
-              </div>
+              <span className="category-icon">{category.icon}</span>
+              <span className="category-name">{category.name}</span>
+              <span className="category-count">
+                {countFor(category.match)} events
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Featured Events */}
+      {/* Featured */}
       <section className="featured-section">
         <div className="section-header">
           <h2 className="section-title">Featured Events</h2>
           <Link to="/movies" className="view-all-link">
-            View All →
+            View all →
           </Link>
         </div>
         <div className="events-grid-modern">
@@ -183,14 +189,11 @@ function Home() {
         </div>
       </section>
 
-      {/* Trending / Selling Fast */}
+      {/* Selling fast */}
       {trendingEvents.length > 0 && (
         <section className="trending-section">
           <div className="section-header">
             <h2 className="section-title">🔥 Selling Fast</h2>
-            <Link to="/movies" className="view-all-link">
-              View All →
-            </Link>
           </div>
           <div className="trending-grid">
             {trendingEvents.map((event) => (
@@ -199,9 +202,9 @@ function Home() {
                 to={`/event/${event.id}`}
                 className="trending-card"
               >
-                <img src={event.imageUrl} alt={event.title} />
+                <img src={event.imageUrl} alt={event.title} loading="lazy" />
                 <div className="trending-overlay">
-                  <span className="trending-badge">Selling Fast</span>
+                  <span className="trending-badge">Selling fast</span>
                   <h4>{event.title}</h4>
                   <p className="trending-info">
                     {event.availableTickets} tickets left • ${event.price}
@@ -213,21 +216,19 @@ function Home() {
         </section>
       )}
 
-      {/* Call to Action */}
-      <section className="cta-section">
-        <div className="cta-content">
+      {/* CTA */}
+      {!user && (
+        <section className="cta-section">
           <h2>Ready to create unforgettable memories?</h2>
           <p className="lead">
-            Join thousands of users who trust Horizon Pass for their
-            entertainment needs.
+            Join thousands of people who trust Horizon – Pass for their
+            entertainment.
           </p>
-          {!user && (
-            <Link className="btn btn-cta" to="/register">
-              Sign Up Now – It's Free
-            </Link>
-          )}
-        </div>
-      </section>
+          <Link className="btn btn-cta" to="/register">
+            Sign up, it's free
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

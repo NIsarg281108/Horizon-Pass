@@ -4,145 +4,85 @@ import { useEvents } from "../Context/EventContext";
 import { useReviews } from "../Context/ReviewContext";
 import EventCard from "../Components/Common/EventCard";
 import FilterBar from "../Components/Common/FilterBar";
+import {
+  DEFAULT_FILTERS,
+  applyEventFilters,
+  sortEvents,
+} from "../Utils/filters";
 
 function SearchResultsPage() {
   const [searchParams] = useSearchParams();
-  const query = searchParams.get("q") || "";
+  const query = (searchParams.get("q") || "").trim();
   const { state } = useEvents();
   const { getAverageRating } = useReviews();
-  const [filters, setFilters] = useState({
-    priceRange: "all",
-    availability: "all",
-    rating: "all",
-  });
-  const [sortBy, setSortBy] = useState("relevant");
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [sortBy, setSortBy] = useState("popular");
+  // Changing this remounts FilterBar so its controls reset too
+  const [filterKey, setFilterKey] = useState(0);
 
-  const filteredEvents = useMemo(() => {
+  const results = useMemo(() => {
     if (!query) return [];
-    const lowerQuery = query.toLowerCase();
+    const q = query.toLowerCase();
 
-    let events = state.events.filter(
-      (event) =>
-        event.title.toLowerCase().includes(lowerQuery) ||
-        event.venue.toLowerCase().includes(lowerQuery) ||
-        event.category.toLowerCase().includes(lowerQuery) ||
-        event.description.toLowerCase().includes(lowerQuery),
+    const matched = state.events.filter((event) =>
+      [event.title, event.venue, event.category, event.description].some(
+        (text) => text?.toLowerCase().includes(q),
+      ),
     );
 
-    // Apply filters
-    events = events.filter((event) => {
-      if (filters.priceRange !== "all") {
-        if (filters.priceRange === "0-25" && event.price >= 25) return false;
-        if (
-          filters.priceRange === "25-50" &&
-          (event.price < 25 || event.price >= 50)
-        )
-          return false;
-        if (
-          filters.priceRange === "50-100" &&
-          (event.price < 50 || event.price >= 100)
-        )
-          return false;
-        if (filters.priceRange === "100+" && event.price < 100) return false;
-      }
+    const filtered = applyEventFilters(matched, filters, getAverageRating);
+    return sortEvents(filtered, sortBy, getAverageRating);
+  }, [query, state.events, filters, sortBy, getAverageRating]);
 
-      if (filters.availability !== "all") {
-        if (
-          filters.availability === "available" &&
-          event.availableTickets === 0
-        )
-          return false;
-        if (
-          filters.availability === "limited" &&
-          event.availableTickets >= event.totalTickets * 0.3
-        )
-          return false;
-        if (filters.availability === "sold-out" && event.availableTickets > 0)
-          return false;
-      }
-
-      if (filters.rating !== "all") {
-        const rating = getAverageRating(event.id);
-        if (filters.rating === "4" && rating < 4) return false;
-        if (filters.rating === "3" && rating < 3) return false;
-        if (filters.rating === "2" && rating < 2) return false;
-      }
-
-      return true;
-    });
-
-    // Apply sorting
-    events = [...events].sort((a, b) => {
-      switch (sortBy) {
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "rating":
-          return getAverageRating(b.id) - getAverageRating(a.id);
-        case "date": {
-          return new Date(a.date) - new Date(b.date);
-        }
-        case "relevant":
-        default: {
-          const aTitleMatch = a.title.toLowerCase().includes(lowerQuery);
-          const bTitleMatch = b.title.toLowerCase().includes(lowerQuery);
-          if (aTitleMatch && !bTitleMatch) return -1;
-          if (!aTitleMatch && bTitleMatch) return 1;
-          return 0;
-        }
-      }
-    });
-
-    return events;
-  }, [state.events, query, filters, sortBy, getAverageRating]);
+  const clearFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+    setSortBy("popular");
+    setFilterKey((k) => k + 1);
+  };
 
   return (
     <div className="search-results-page">
       <div className="search-header">
-        <h1>Search Results</h1>
+        <h1>Search results</h1>
         <p className="search-query">
-          {query ? `"${query}"` : "All events"} • {filteredEvents.length}{" "}
-          results found
+          {query ? `"${query}"` : "Type something in the search bar"} •{" "}
+          {results.length} results found
         </p>
       </div>
 
       <div className="search-content">
         <div className="search-sidebar">
           <FilterBar
+            key={filterKey}
             onFilterChange={setFilters}
             onSortChange={setSortBy}
-            totalCount={filteredEvents.length}
+            totalCount={results.length}
           />
         </div>
 
         <div className="search-results">
-          {filteredEvents.length === 0 ? (
+          {results.length === 0 ? (
             <div className="no-results">
               <div className="no-results-icon">🔍</div>
               <h3>No results found</h3>
               <p className="text-muted">
                 {query
                   ? `No events match "${query}". Try different keywords or adjust your filters.`
-                  : "Try adjusting your filters to see more results."}
+                  : "Search for a movie, play, show, activity or resort."}
               </p>
-              <button
-                className="btn btn-outline-primary"
-                onClick={() => {
-                  setFilters({
-                    priceRange: "all",
-                    availability: "all",
-                    rating: "all",
-                  });
-                  setSortBy("relevant");
-                }}
-              >
-                Clear Filters
-              </button>
+              {query && (
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={clearFilters}
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="results-grid">
-              {filteredEvents.map((event) => (
+              {results.map((event) => (
                 <div key={event.id} className="result-item">
                   <EventCard event={event} />
                 </div>

@@ -1,5 +1,6 @@
 // src/data/mockEvents.js
 import { createPlaceholderImage } from "../Utils/Helpers";
+import { getEventImages } from "./eventImages";
 
 const eventPalette = {
   Movies: ["#e50914", "#ff8a00"],
@@ -426,3 +427,7 @@ export const mockEvents = [
     showtimes: ["15:00", "17:00", "19:00"],
   },
 ];
+// Use real photos for every event. The generated SVG stays as the fallback.
+mockEvents.forEach((event) => {
+  event.imageUrl = getEventImages(event).main;
+});

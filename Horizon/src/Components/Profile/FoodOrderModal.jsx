@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useBookings } from '../../Context/BookingContext';
-import { mockFoodMenu } from '../../data/mockFoodMenu';
+import { mockFoodMenu } from '../../Data/mockFoodMenu';
 
 // ==================== CONFIGURATION ====================
 const MERCHANT_UPI_ID = '9987645607@fam';

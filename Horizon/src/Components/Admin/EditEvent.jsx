@@ -50,10 +50,17 @@ function EditEvent() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Keep the number of tickets already sold when the total changes
+    const original = state.events.find((ev) => ev.id === id);
+    const soldTickets = original
+      ? original.totalTickets - original.availableTickets
+      : 0;
+
     const updatedEvent = {
       ...formData,
       id: id,
-      availableTickets: Number(formData.totalTickets),
+      availableTickets: Math.max(0, Number(formData.totalTickets) - soldTickets),
       price: Number(formData.price),
       totalTickets: Number(formData.totalTickets),
       showtimes: formData.showtimes
@@ -69,6 +76,7 @@ function EditEvent() {
         formData.imageUrl ||
         createPlaceholderImage("Event", ["#6d5efb", "#3ecf8e"]),
     };
+
     dispatch({ type: "UPDATE_EVENT", payload: updatedEvent });
     alert("Event updated successfully!");
     navigate("/admin");

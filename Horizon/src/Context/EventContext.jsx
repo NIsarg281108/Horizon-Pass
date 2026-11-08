@@ -1,11 +1,36 @@
 import { createContext, useContext, useReducer, useEffect } from "react";
 import { mockEvents } from "../Data/mockEvents";
+import { getEventImages } from "../Data/eventImages";
 
 const EventContext = createContext();
+const STORAGE_KEY = "horizon_events";
 
-const initialState = {
-  events: mockEvents,
-};
+// Generated placeholders are SVG data URLs, which start with "data:image/svg"
+const isGeneratedPlaceholder = (url) =>
+  typeof url === "string" && url.startsWith("data:image/svg");
+
+// Mock events get their photo, even when a saved copy has the old placeholder.
+// Images set by an admin are left alone.
+function refreshImages(events) {
+  const mockIds = new Set(mockEvents.map((e) => e.id));
+  return events.map((event) => {
+    if (!mockIds.has(event.id)) return event;
+    if (!event.imageUrl || isGeneratedPlaceholder(event.imageUrl)) {
+      return { ...event, imageUrl: getEventImages(event).main };
+    }
+    return event;
+  });
+}
+
+function loadEvents() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (Array.isArray(stored)) return refreshImages(stored);
+  } catch {
+    // Corrupt or missing data: fall back to the mock list
+  }
+  return refreshImages(mockEvents);
+}
 
 function eventReducer(state, action) {
   switch (action.type) {
@@ -38,30 +63,35 @@ function eventReducer(state, action) {
             : event,
         ),
       };
+    case "ADJUST_TICKETS":
+      return {
+        ...state,
+        events: state.events.map((event) =>
+          event.id === action.payload.eventId
+            ? {
+                ...event,
+                availableTickets: Math.min(
+                  event.totalTickets,
+                  Math.max(0, event.availableTickets + action.payload.delta),
+                ),
+              }
+            : event,
+        ),
+      };
     default:
       return state;
   }
 }
 
-// Safe JSON parsing
-const storedEvents = localStorage.getItem("horizon_events");
-let initialEvents = { events: mockEvents };
-if (storedEvents) {
-  try {
-    initialEvents = { events: JSON.parse(storedEvents) };
-    if (!Array.isArray(initialEvents.events)) {
-      initialEvents = { events: mockEvents };
-    }
-  } catch (e) {
-    initialEvents = { events: mockEvents };
-  }
-}
-
 export function EventProvider({ children }) {
-  const [state, dispatch] = useReducer(eventReducer, initialEvents);
+  const [state, dispatch] = useReducer(
+    eventReducer,
+    undefined,
+    () => ({ events: loadEvents() }),
+  );
 
   useEffect(() => {
-    localStorage.setItem("horizon_events", JSON.stringify(state.events));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events));
   }, [state.events]);
 
   return (

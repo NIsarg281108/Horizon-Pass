@@ -6,20 +6,29 @@ import { useEvents } from "../Context/EventContext";
 import { useReviews } from "../Context/ReviewContext";
 import { Link } from "react-router";
 import EventCard from "../Components/Common/EventCard";
+import AccountSettings from "../Components/Profile/AccountSettings";
+import FoodOrderModal from "../Components/Profile/FoodOrderModal";
+import PrintableTicket from "../Components/Profile/PrintableTicket";
+import { cancelBookingAndRelease } from "../Utils/bookingActions";
 
 function Profile() {
   const { user } = useAuth();
-  const { state: bookingState } = useBookings();
+  const { state: bookingState, dispatch: bookingDispatch } = useBookings();
   const { wishlist } = useWishlist();
-  const { state: eventState } = useEvents();
+  const { state: eventState, dispatch: eventDispatch } = useEvents();
   const { getReviewsForEvent } = useReviews();
   const [activeTab, setActiveTab] = useState("overview");
+  const [orderingBookingId, setOrderingBookingId] = useState(null);
+  const [ticketBooking, setTicketBooking] = useState(null);
 
-  const favoriteEvents = eventState.events.filter((event) =>
-    wishlist.includes(event.id),
+  const favoriteEvents = useMemo(
+    () => eventState.events.filter((event) => wishlist.includes(event.id)),
+    [eventState.events, wishlist],
   );
-  const userBookings = bookingState.bookings.filter(
-    (b) => b.userId === user?.id,
+
+  const userBookings = useMemo(
+    () => bookingState.bookings.filter((b) => b.userId === user?.id),
+    [bookingState.bookings, user?.id],
   );
 
   const stats = useMemo(() => {
@@ -51,6 +60,41 @@ function Profile() {
       favoriteCount: favoriteEvents.length,
     };
   }, [userBookings, favoriteEvents, getReviewsForEvent, user?.id]);
+
+  // Registered users get a timestamp as their id, demo accounts get small ids
+  const memberSince = useMemo(() => {
+    const timestamp = Number(user?.id);
+    if (Number.isFinite(timestamp) && timestamp > 1e12) {
+      return new Date(timestamp).toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+    }
+    return "Demo account";
+  }, [user?.id]);
+
+  // Most common categories from bookings and wishlist
+  const favoriteCategories = useMemo(() => {
+    const counts = {};
+    const add = (category) => {
+      if (category) counts[category] = (counts[category] || 0) + 1;
+    };
+    userBookings.forEach((b) => add(b.category));
+    favoriteEvents.forEach((e) => add(e.category));
+
+    const top = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([category]) => category);
+
+    return top.length ? top.join(", ") : "None yet";
+  }, [userBookings, favoriteEvents]);
+
+  const handleCancelBooking = (booking) => {
+    if (window.confirm("Cancel this booking? Its tickets will be released.")) {
+      cancelBookingAndRelease(bookingDispatch, eventDispatch, booking);
+    }
+  };
 
   if (!user) {
     return (
@@ -89,7 +133,6 @@ function Profile() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">🎫</div>
@@ -121,7 +164,6 @@ function Profile() {
         </div>
       </div>
 
-      {/* Profile Tabs */}
       <div className="profile-tabs">
         <button
           className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
@@ -149,7 +191,6 @@ function Profile() {
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="profile-content">
         {activeTab === "overview" && (
           <div className="overview-section">
@@ -192,7 +233,7 @@ function Profile() {
                 <h3>Account Activity</h3>
                 <div className="info-item">
                   <span className="info-label">Member Since</span>
-                  <span className="info-value">January 2025</span>
+                  <span className="info-value">{memberSince}</span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Account Type</span>
@@ -206,7 +247,7 @@ function Profile() {
                 </div>
                 <div className="info-item">
                   <span className="info-label">Favorite Categories</span>
-                  <span className="info-value">Movies, Plays</span>
+                  <span className="info-value">{favoriteCategories}</span>
                 </div>
               </div>
             </div>
@@ -246,7 +287,7 @@ function Profile() {
                     className="btn btn-outline-primary mt-3"
                     onClick={() => setActiveTab("bookings")}
                   >
-                    View All Bookings
+                    View all bookings
                   </button>
                 )}
               </div>
@@ -271,37 +312,76 @@ function Profile() {
             ) : (
               <div className="bookings-grid">
                 {userBookings.map((booking) => (
-                  <Link
-                    key={booking.id}
-                    to={`/event/${booking.eventId}`}
-                    className="booking-card"
-                  >
-                    <img
-                      src={booking.imageUrl}
-                      alt={booking.title}
-                      className="booking-image"
-                    />
-                    <div className="booking-info">
-                      <h4>{booking.title}</h4>
-                      <p className="booking-venue">{booking.venue}</p>
-                      <div className="booking-meta">
-                        <span>📅 {booking.date}</span>
-                        <span>⏰ {booking.time}</span>
+                  <div key={booking.id} className="booking-card-wrap">
+                    <Link
+                      to={`/event/${booking.eventId}`}
+                      className="booking-card"
+                    >
+                      <img
+                        src={booking.imageUrl}
+                        alt={booking.title}
+                        className="booking-image"
+                      />
+                      <div className="booking-info">
+                        <h4>{booking.title}</h4>
+                        <p className="booking-venue">{booking.venue}</p>
+                        <div className="booking-meta">
+                          <span>📅 {booking.date}</span>
+                          <span>⏰ {booking.time}</span>
+                        </div>
+                        <div className="booking-tier">
+                          <span className="tier-badge">{booking.tier}</span>
+                          <span className="quantity">x{booking.quantity}</span>
+                        </div>
+                        {booking.seats?.length > 0 && (
+                          <p className="booking-seats">
+                            Seats: {booking.seats.join(", ")}
+                          </p>
+                        )}
+                        <div className="booking-footer">
+                          <span className={`status-badge ${booking.status}`}>
+                            {booking.status}
+                          </span>
+                          <span className="price">
+                            ${booking.totalPrice?.toFixed(2) || "0.00"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="booking-tier">
-                        <span className="tier-badge">{booking.tier}</span>
-                        <span className="quantity">x{booking.quantity}</span>
+                    </Link>
+
+                    {booking.status === "confirmed" && (
+                      <div className="booking-actions">
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={() => setTicketBooking(booking)}
+                        >
+                          🎟 Ticket
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={() => setOrderingBookingId(booking.id)}
+                        >
+                          🍿 Order food
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleCancelBooking(booking)}
+                        >
+                          Cancel
+                        </button>
                       </div>
-                      <div className="booking-footer">
-                        <span className={`status-badge ${booking.status}`}>
-                          {booking.status}
-                        </span>
-                        <span className="price">
-                          ${booking.totalPrice?.toFixed(2) || "0.00"}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+                    )}
+
+                    {booking.foodOrders && booking.foodOrders.length > 0 && (
+                      <p className="text-muted small mt-2 mb-0">
+                        {booking.foodOrders.length} food order
+                        {booking.foodOrders.length === 1 ? "" : "s"} placed
+                      </p>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -334,58 +414,22 @@ function Profile() {
           </div>
         )}
 
-        {activeTab === "settings" && (
-          <div className="settings-section">
-            <h2>Profile Settings</h2>
-            <div className="settings-card">
-              <h3>Account Settings</h3>
-              <p className="text-muted mb-4">
-                Manage your account preferences and security settings.
-              </p>
-
-              <div className="settings-item">
-                <div className="settings-info">
-                  <strong>Change Password</strong>
-                  <p className="text-muted mb-0">
-                    Update your password to keep your account secure
-                  </p>
-                </div>
-                <button className="btn btn-outline-primary">Change</button>
-              </div>
-
-              <div className="settings-item">
-                <div className="settings-info">
-                  <strong>Email Notifications</strong>
-                  <p className="text-muted mb-0">
-                    Manage your email notification preferences
-                  </p>
-                </div>
-                <button className="btn btn-outline-primary">Configure</button>
-              </div>
-
-              <div className="settings-item">
-                <div className="settings-info">
-                  <strong>Privacy Settings</strong>
-                  <p className="text-muted mb-0">
-                    Control your privacy and data settings
-                  </p>
-                </div>
-                <button className="btn btn-outline-primary">Manage</button>
-              </div>
-
-              <div className="settings-item danger">
-                <div className="settings-info">
-                  <strong>Delete Account</strong>
-                  <p className="text-muted mb-0">
-                    Permanently delete your account and all data
-                  </p>
-                </div>
-                <button className="btn btn-danger">Delete</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "settings" && <AccountSettings />}
       </div>
+
+      {orderingBookingId && (
+        <FoodOrderModal
+          bookingId={orderingBookingId}
+          onClose={() => setOrderingBookingId(null)}
+        />
+      )}
+
+      {ticketBooking && (
+        <PrintableTicket
+          booking={ticketBooking}
+          onClose={() => setTicketBooking(null)}
+        />
+      )}
     </div>
   );
 }

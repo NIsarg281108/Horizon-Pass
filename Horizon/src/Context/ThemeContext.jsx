@@ -1,24 +1,32 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+// src/Context/ThemeContext.jsx
+import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
+const getInitialTheme = () => {
+  const saved = localStorage.getItem("horizon_theme");
+  if (saved === "light" || saved === "dark") return saved;
+
+  // First visit: follow the system preference
+  const prefersDark =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  return prefersDark ? "dark" : "light";
+};
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('horizon_theme') || 'light';
-  });
+  const [theme, setTheme] = useState(getInitialTheme);
 
   useEffect(() => {
-    localStorage.setItem('horizon_theme', theme);
-    // Toggle dark mode class on the root html element
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark-mode');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-    }
+    localStorage.setItem("horizon_theme", theme);
+    // Bootstrap and index.css both switch on this attribute
+    document.documentElement.setAttribute("data-bs-theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return (

@@ -9,6 +9,11 @@ import SocialShare from "../Components/Common/SocialShare";
 import Recommendations from "../Components/Common/Recommendations";
 import CalendarIntegration from "../Components/Common/CalendarIntegration";
 import PriceChart from "../Components/Common/PriceChart";
+import { SEAT_ROWS, SEATS_PER_ROW, getTakenSeats } from "../Utils/seats";
+import { getEventImages } from "../Data/eventImages";
+
+const MAX_SEATS = 10;
+const SEAT_MAP_CATEGORIES = ["Movies", "Plays", "Shows"];
 
 function EventDetails() {
   const { id } = useParams();
@@ -25,11 +30,12 @@ function EventDetails() {
   );
 
   const [quantity, setQuantity] = useState(1);
+  const [selectedSeats, setSelectedSeats] = useState([]);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
-  const [activeImage, setActiveImage] = useState(0);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   const isWished = wishlist.includes(event?.id);
 
@@ -43,6 +49,17 @@ function EventDetails() {
   const activeTime = event?.showtimes?.includes(selectedTime)
     ? selectedTime
     : event?.showtimes?.[0] || event?.time || "";
+
+  const usesSeatMap = !!event && SEAT_MAP_CATEGORIES.includes(event.category);
+  const images = event ? getEventImages(event) : null;
+
+  const takenSeats = useMemo(
+    () => getTakenSeats(bookingState.bookings, event?.id, activeTime),
+    [bookingState.bookings, event?.id, activeTime],
+  );
+
+  // On seat-map events the quantity is whatever seats were picked
+  const effectiveQuantity = usesSeatMap ? selectedSeats.length : quantity;
 
   if (!event) {
     return (
@@ -63,24 +80,62 @@ function EventDetails() {
     return 1;
   };
 
-  const getGroupDiscount = () => {
-    if (quantity >= 7) return 0.15; // 15% off for 7+ tickets
-    if (quantity >= 5) return 0.1; // 10% off for 5-6 tickets
-    if (quantity >= 4) return 0.05; // 5% off for 4 tickets
+  const getGroupDiscount = (qty) => {
+    if (qty >= 7) return 0.15;
+    if (qty >= 5) return 0.1;
+    if (qty >= 4) return 0.05;
     return 0;
   };
 
-  const basePrice = event.price * quantity * getMultiplier(activeTier);
-  const groupDiscount = basePrice * getGroupDiscount();
+  const basePrice = event.price * effectiveQuantity * getMultiplier(activeTier);
+  const groupDiscount = basePrice * getGroupDiscount(effectiveQuantity);
   const totalPrice = basePrice - groupDiscount;
 
+  const toggleSeat = (seat) => {
+    if (takenSeats.has(seat)) return;
+
+    if (selectedSeats.includes(seat)) {
+      setSelectedSeats(selectedSeats.filter((s) => s !== seat));
+      return;
+    }
+    if (selectedSeats.length >= MAX_SEATS) {
+      alert(`You can book up to ${MAX_SEATS} seats at a time.`);
+      return;
+    }
+    setSelectedSeats([...selectedSeats, seat]);
+  };
+
+  const selectShowtime = (time) => {
+    setSelectedTime(time);
+    // Taken seats differ by showtime, so clear the current selection
+    setSelectedSeats([]);
+  };
+
   const handleBookNow = () => {
-    if (quantity > 10) {
+    if (effectiveQuantity === 0) {
+      alert(
+        usesSeatMap
+          ? "Please choose at least one seat."
+          : "Please choose a quantity.",
+      );
+      return;
+    }
+    if (effectiveQuantity > 10) {
       alert(
         "For group bookings larger than 10 tickets, please contact our support team.",
       );
       return;
     }
+    if (effectiveQuantity > event.availableTickets) {
+      alert(`Only ${event.availableTickets} tickets are left.`);
+      return;
+    }
+    if (selectedSeats.some((seat) => takenSeats.has(seat))) {
+      alert("Some of those seats were just taken. Please choose again.");
+      setSelectedSeats(selectedSeats.filter((seat) => !takenSeats.has(seat)));
+      return;
+    }
+
     const bookingData = {
       eventId: event.id,
       title: event.title,
@@ -89,10 +144,11 @@ function EventDetails() {
       date: event.date,
       time: activeTime || event.time,
       tier: activeTier,
-      quantity,
+      quantity: effectiveQuantity,
       totalPrice,
       imageUrl: event.imageUrl,
-      isGroupBooking: quantity > 3,
+      isGroupBooking: effectiveQuantity > 3,
+      ...(usesSeatMap ? { seats: [...selectedSeats] } : {}),
     };
     navigate("/checkout", { state: { bookingData } });
   };
@@ -122,16 +178,6 @@ function EventDetails() {
     setReviewComment("");
   };
 
-  const imageGallery = [
-    event.imageUrl,
-    ...Array(3)
-      .fill(0)
-      .map(
-        (_, i) =>
-          `https://images.unsplash.com/photo-${1500000000000 + i * 1000000}?w=800&h=600&fit=crop`,
-      ),
-  ];
-
   return (
     <div className="event-details-page">
       <div className="event-details-header">
@@ -144,7 +190,7 @@ function EventDetails() {
           className="btn btn-wishlist"
           onClick={() => toggleWishlist(event.id)}
         >
-          {isWished ? "❤️ Saved" : "🤍 Save to Wishlist"}
+          {isWished ? "❤️ Saved" : "🤍 Save to wishlist"}
         </button>
         <button
           className="btn btn-share"
@@ -156,31 +202,33 @@ function EventDetails() {
           className="btn btn-calendar"
           onClick={() => setShowCalendarModal(true)}
         >
-          📅 Add to Calendar
+          📅 Add to calendar
         </button>
       </div>
 
       <div className="event-details-content">
         <div className="event-main">
-          {/* Image Gallery */}
           <div className="event-gallery">
             <div className="main-image">
-              <img src={imageGallery[activeImage]} alt={event.title} />
+              <img
+                src={images.gallery[activeImage] || images.main}
+                alt={event.title}
+              />
             </div>
             <div className="thumbnail-grid">
-              {imageGallery.map((img, idx) => (
+              {images.gallery.map((src, idx) => (
                 <img
-                  key={idx}
-                  src={img}
-                  alt={`Thumbnail ${idx + 1}`}
+                  key={src}
+                  src={src}
+                  alt={`${event.title} photo ${idx + 1}`}
                   className={`thumbnail ${activeImage === idx ? "active" : ""}`}
                   onClick={() => setActiveImage(idx)}
+                  loading="lazy"
                 />
               ))}
             </div>
           </div>
 
-          {/* Event Info */}
           <div className="event-info-card">
             <div className="event-header">
               <h1 className="event-title">{event.title}</h1>
@@ -231,7 +279,7 @@ function EventDetails() {
 
             {event.facilities && (
               <div className="event-facilities">
-                <h4>Facilities & Amenities</h4>
+                <h4>Facilities & amenities</h4>
                 <div className="facilities-list">
                   {event.facilities.map((facility, idx) => (
                     <span key={idx} className="facility-tag">
@@ -243,16 +291,15 @@ function EventDetails() {
             )}
           </div>
 
-          {/* Reviews Section */}
           <div className="reviews-section">
             <h3>Reviews ({eventReviews.length})</h3>
 
             {hasBooked && (
               <div className="add-review-card">
-                <h4>Write a Review</h4>
+                <h4>Write a review</h4>
                 <form onSubmit={handleSubmitReview}>
                   <div className="rating-input">
-                    <label>Your Rating</label>
+                    <label>Your rating</label>
                     <div className="star-rating">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <span
@@ -272,8 +319,8 @@ function EventDetails() {
                     onChange={(e) => setReviewComment(e.target.value)}
                     rows="3"
                   ></textarea>
-                  <button type="submit" className="btn btn-primary">
-                    Submit Review
+                  <button type="submit" className="btn btn-primary mt-2">
+                    Submit review
                   </button>
                 </form>
               </div>
@@ -309,11 +356,10 @@ function EventDetails() {
           </div>
         </div>
 
-        {/* Booking Sidebar */}
         <div className="event-sidebar">
           <div className="booking-card">
             <div className="booking-header">
-              <h3>Book Tickets</h3>
+              <h3>Book tickets</h3>
               <div className="price-display">
                 <span className="price-amount">${event.price}</span>
                 {event.category === "Resorts & Hotels" && (
@@ -330,8 +376,9 @@ function EventDetails() {
                     {event.showtimes.map((time) => (
                       <button
                         key={time}
+                        type="button"
                         className={`time-option ${activeTime === time ? "active" : ""}`}
-                        onClick={() => setSelectedTime(time)}
+                        onClick={() => selectShowtime(time)}
                       >
                         {time}
                       </button>
@@ -340,56 +387,134 @@ function EventDetails() {
                 </div>
               )}
 
-              <div className="form-group">
-                <label>{event.roomTypes ? "Room Type" : "Ticket Tier"}</label>
-                <div className="tier-options">
-                  {tierOptions.map((option) => (
-                    <button
-                      key={option}
-                      className={`tier-option ${activeTier === option ? "active" : ""}`}
-                      onClick={() => setTier(option)}
-                    >
-                      {option}
-                      <span className="tier-multiplier">
-                        x{getMultiplier(option)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Quantity</label>
-                <div className="quantity-selector">
-                  <button
-                    className="qty-btn"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    -
-                  </button>
-                  <span className="qty-value">{quantity}</span>
-                  <button
-                    className="qty-btn"
-                    onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-                {quantity > 3 && (
-                  <div className="group-discount-badge">
-                    🎉 Group booking:{" "}
-                    {quantity >= 7
-                      ? "15% off"
-                      : quantity >= 5
-                        ? "10% off"
-                        : "5% off"}
+              {usesSeatMap && (
+                <div className="form-group">
+                  <label>Choose seats (up to {MAX_SEATS})</label>
+                  <div className="screen-bar">SCREEN</div>
+                  <div className="seat-map">
+                    {SEAT_ROWS.map((row) => (
+                      <div key={row} className="seat-row">
+                        <span className="seat-row-label">{row}</span>
+                        {Array.from({ length: SEATS_PER_ROW }, (_, i) => {
+                          const seat = `${row}${i + 1}`;
+                          const isTaken = takenSeats.has(seat);
+                          const isSelected = selectedSeats.includes(seat);
+                          return (
+                            <button
+                              key={seat}
+                              type="button"
+                              className={`seat ${isTaken ? "taken" : ""} ${isSelected ? "selected" : ""}`}
+                              disabled={isTaken}
+                              onClick={() => toggleSeat(seat)}
+                              aria-label={`Seat ${seat}${isTaken ? ", taken" : ""}`}
+                              aria-pressed={isSelected}
+                            >
+                              {i + 1}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
+                  <div className="seat-legend">
+                    <span>
+                      <i className="seat-key available"></i> Available
+                    </span>
+                    <span>
+                      <i className="seat-key selected"></i> Selected
+                    </span>
+                    <span>
+                      <i className="seat-key taken"></i> Taken
+                    </span>
+                  </div>
+                  <p className="text-muted small mt-2 mb-0">
+                    Selected:{" "}
+                    {selectedSeats.length
+                      ? selectedSeats.join(", ")
+                      : "none yet"}
+                  </p>
+                </div>
+              )}
+
+              {!usesSeatMap && (
+                <div className="form-group">
+                  <label>{event.roomTypes ? "Room type" : "Ticket tier"}</label>
+                  <div className="tier-options">
+                    {tierOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={`tier-option ${activeTier === option ? "active" : ""}`}
+                        onClick={() => setTier(option)}
+                      >
+                        {option}
+                        <span className="tier-multiplier">
+                          x{getMultiplier(option)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {usesSeatMap && (
+                <div className="form-group">
+                  <label>Ticket tier</label>
+                  <div className="tier-options">
+                    {tierOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={`tier-option ${activeTier === option ? "active" : ""}`}
+                        onClick={() => setTier(option)}
+                      >
+                        {option}
+                        <span className="tier-multiplier">
+                          x{getMultiplier(option)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!usesSeatMap && (
+                <div className="form-group">
+                  <label>Quantity</label>
+                  <div className="quantity-selector">
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      -
+                    </button>
+                    <span className="qty-value">{quantity}</span>
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {effectiveQuantity > 3 && (
+                <div className="group-discount-badge">
+                  🎉 Group booking:{" "}
+                  {effectiveQuantity >= 7
+                    ? "15% off"
+                    : effectiveQuantity >= 5
+                      ? "10% off"
+                      : "5% off"}
+                </div>
+              )}
 
               <div className="booking-summary">
                 <div className="summary-row">
-                  <span>Base Price</span>
+                  <span>Base price</span>
                   <span>${event.price}</span>
                 </div>
                 <div className="summary-row">
@@ -398,13 +523,13 @@ function EventDetails() {
                 </div>
                 <div className="summary-row">
                   <span>Quantity</span>
-                  <span>x{quantity}</span>
+                  <span>x{effectiveQuantity}</span>
                 </div>
-                {quantity > 3 && (
+                {effectiveQuantity > 3 && (
                   <div className="summary-row discount">
-                    <span>Group Discount</span>
+                    <span>Group discount</span>
                     <span className="discount-amount">
-                      -{getGroupDiscount() * 100}%
+                      -{getGroupDiscount(effectiveQuantity) * 100}%
                     </span>
                   </div>
                 )}
@@ -417,11 +542,15 @@ function EventDetails() {
               </div>
 
               <button
+                type="button"
                 className="btn btn-book-now btn-lg w-100"
                 onClick={handleBookNow}
-                disabled={event.availableTickets === 0}
+                disabled={
+                  event.availableTickets === 0 ||
+                  (usesSeatMap && effectiveQuantity === 0)
+                }
               >
-                {event.availableTickets === 0 ? "Sold Out" : "Book Now"}
+                {event.availableTickets === 0 ? "Sold out" : "Book now"}
               </button>
 
               {event.availableTickets < 10 && event.availableTickets > 0 && (
@@ -432,14 +561,12 @@ function EventDetails() {
             </div>
           </div>
 
-          {/* Price Chart */}
           <div className="booking-card">
             <PriceChart event={event} />
           </div>
         </div>
       </div>
 
-      {/* Recommendations */}
       <Recommendations currentEventId={event.id} limit={4} />
 
       {showShareModal && (
